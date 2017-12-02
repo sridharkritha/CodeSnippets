@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<head>
+<title>Demo: Animating Sprites In HTML5 Canvas | onlyWebPro.com</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, user-scalable=no">
+
+<style>
+	#myCanvas {
+		border: 1px solid red;
+	}
+
+</style>
+</head>
+<body>
+
+    <canvas id="myCanvas" width="1300" height="600">
+        <!-- Insert fallback content here -->
+        Sorry, your browser doesn't support canvas technology
+    </canvas>
+      
+    <script>
+		var imgWidth = 100, imgHeight = 100,
+			frames = 10, currentFrame = 0;
+	 
+			canvas = document.getElementById("myCanvas");
+			ctx = canvas.getContext("2d");
+			image = new Image()
+			image.src = 'coin.png';
+	 
+		var draw = function(){
+			ctx.clearRect(0, 0, 500, 500);
+			ctx.drawImage(image, imgWidth * currentFrame,  0 ,  imgWidth, imgHeight, 0, 0, imgWidth, imgHeight);
+
+            currentFrame++;
+            if(currentFrame + 1 > frames) currentFrame = 0;	 
+		}
+	     
+		setInterval(draw, 100);
+	</script>
+
+<!-- END demo_content -->
+</body>
+</html>

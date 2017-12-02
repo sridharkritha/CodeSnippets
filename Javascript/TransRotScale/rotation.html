@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<head>
+<title>Demo: Animating Sprites In HTML5 Canvas | onlyWebPro.com</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, user-scalable=no">
+
+<style>
+	#myCanvas {
+		border: 1px solid red;
+	}
+
+</style>
+</head>
+<body>
+
+    <canvas id="myCanvas" width="1300" height="600">
+        <!-- Insert fallback content here -->
+        Sorry, your browser doesn't support canvas technology
+    </canvas>
+      
+    <script>
+		var imgWidth = 70,imgHeight = 60;
+		// var width = 100, height = 100;
+		var frames = 10, currentFrame = 0;
+
+		var clockwise = true;
+
+		var xCoord = 500; yCoord = 250, radius = 200, degrees = 0;
+	 
+			canvas = document.getElementById("myCanvas");
+			ctx = canvas.getContext("2d");
+			image = new Image()
+			image.src = 'pepsi.png';
+
+/*
+// No need to use save and restore between calls as it sets the transform 
+// Also combining the scale and origin into the one call makes it quicker
+// x,y   - position of image center
+// cx,cy - point of rotation
+// scale - scale of image
+// deg   - rotation in radians.
+function drawImageCenter(image, x, y, cx, cy, scale, deg){
+    	
+    ctx.setTransform(scale, 0, 0, scale, x, y); // Scale and Transform
+    ctx.rotate(deg);
+    ctx.drawImage(image, 0,  0 , imgWidth, imgHeight, -cx, -cy, imgWidth, imgHeight);
+	// To reset the 2D context transform
+    ctx.setTransform(1,0,0,1,0,0); // which is much quicker than save and restore
+} 
+*/
+scale = 1.0;	 
+		var draw = function(){
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+
+            // Draw line
+			ctx.beginPath();
+			// Horizontal Line
+			ctx.moveTo(0,yCoord); ctx.lineTo(1300,yCoord);
+			// Vertical Line
+			ctx.moveTo(xCoord,0); ctx.lineTo(xCoord,600);    
+			ctx.stroke();
+			// Circle 
+			ctx.beginPath();  			
+			ctx.arc(xCoord, yCoord, radius, 0, 2*Math.PI);
+			ctx.stroke();
+            /////////////////////////////////////////////////////////////////////////////////////////////////////
+			// Ref: http://stackoverflow.com/questions/17411991/html5-canvas-rotate-image
+			// http://stackoverflow.com/questions/7496674/how-to-rotate-one-image-in-a-canvas
+			// http://creativejs.com/2012/01/day-10-drawing-rotated-images-into-canvas/
+
+            
+			// Image rotate itself by its own center of axis; At the location (xCoord,yCoord) ofcanvas.
+			ctx.save();			
+			// ctx.setTransform(scale, 0, 0, scale, x, y); // sets scale and origin
+			ctx.setTransform(scale, 0, 0, scale, xCoord,yCoord); // sets scale and origin
+			// ctx.translate(xCoord,yCoord);
+			ctx.rotate(degrees * Math.PI/180);
+			ctx.drawImage(image, 0,  0 , imgWidth, imgHeight, -imgWidth/2, -imgHeight/2, imgWidth, imgHeight);
+            ctx.restore();
+			// degrees = -40;
+			
+			var turn = 41;
+			if(clockwise && degrees < turn) {
+               degrees += 1;			   
+			   if(degrees >= turn) {
+				   clockwise = false;				  
+			   }
+			}			  		
+			else {
+				degrees -= 1;				
+				if(degrees <= -45) {
+					clockwise = true;									}
+			}
+			
+
+
+/*
+                 
+			// Image rotate itself by its own center of axis; At the location (0,0) of canvas.
+			ctx.save();
+			ctx.rotate(degrees * Math.PI/180);
+			ctx.drawImage(image, 0,  0 , imgWidth, imgHeight, -imgWidth/2, -imgHeight/2, imgWidth, imgHeight);
+			ctx.restore();	
+
+			// Image rotate itself by its own center of axis; At the location (xCoord,yCoord) ofcanvas.
+			ctx.save();			
+			ctx.translate(xCoord,yCoord);
+			ctx.rotate(degrees * Math.PI/180);
+			ctx.drawImage(image, 0,  0 , imgWidth, imgHeight, -imgWidth/2, -imgHeight/2, imgWidth, imgHeight);
+            ctx.restore();				
+			
+            // Image rotates at top left corner as axis; At the location (xCoord,yCoord) ofcanvas.
+			ctx.save();
+			ctx.translate(xCoord,yCoord);
+			ctx.rotate(degrees * Math.PI/180);
+			ctx.drawImage(image, 0,  0 , imgWidth, imgHeight, 0, 0, imgWidth, imgHeight);
+			ctx.restore();
+
+			// Image revolve around (0,0) location of canvas as it's center
+			ctx.save();
+			ctx.rotate(degrees * Math.PI/180);
+			ctx.drawImage(image, 0,  0 , imgWidth, imgHeight, xCoord, yCoord, imgWidth, imgHeight);
+			ctx.restore();				
+
+			// Image revolves on the circumference of a circle of 'radius' and center at (xCoord,yCoord)
+			ctx.save();
+			ctx.translate(xCoord,yCoord);
+			ctx.rotate((degrees+0) * Math.PI/180);
+			ctx.drawImage(image, 0,  0 , imgWidth, imgHeight, radius, 0, imgWidth, imgHeight);
+			ctx.restore();			
+
+			// Image revolves on the circumference of a circle of 'radius' and center at (xCoord,yCoord)
+			// Just like above but phase difference
+			ctx.save();
+			ctx.translate(xCoord,yCoord);
+			ctx.rotate(degrees * Math.PI/180);
+			ctx.drawImage(image, 0,  0 , imgWidth, imgHeight, 0, radius, imgWidth, imgHeight);
+			ctx.restore();	
+
+            ++degrees;
+	*/
+           // currentFrame++;
+            if(currentFrame + 1 > frames) currentFrame = 0;	 
+		}
+	     
+		setInterval(draw, 100);
+	</script>
+
+<!-- END demo_content -->
+</body>
+</html>
