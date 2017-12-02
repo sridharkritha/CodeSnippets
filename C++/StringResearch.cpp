@@ -4,7 +4,8 @@
 #include <vector>
 using namespace std;
 
-void function(char* pS,size_t len) {
+void function(char* pS,size_t len) 
+{
 	return;
 }
 
