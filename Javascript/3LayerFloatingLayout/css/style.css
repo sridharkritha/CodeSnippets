@@ -1,0 +1,28 @@
+* { /* Not related to floats / clear both, used it for demo purpose only */
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+header, footer {
+    border: 5px solid #000;
+    height: 100px;
+}
+
+aside {
+    float: left;
+    width: 30%;
+    border: 5px solid #000;
+    height: 300px;
+}
+
+section {
+    float: left;
+    width: 70%;
+    border: 5px solid #000;
+    height: 300px;
+}
+
+.clear {
+    clear: both;
+}
