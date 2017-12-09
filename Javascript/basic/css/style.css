@@ -1,15 +1,15 @@
-#numOne {    
+#displayElement {    
 font-size: 200%;
 font-stretch: expanded;
 font-weight: 900;    
 height: 50%;
-/*color: white;*/
+color: red;
 }
 
 .numPadSz {
 position: relative;
 display: inline-block;
-width: 40px;
+width: 150px;
 height: 40px;
 font-weight: bold;
 }
