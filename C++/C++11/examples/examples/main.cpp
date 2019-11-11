@@ -1,7 +1,7 @@
 #if 1
 
-
 #include <iostream>
+
 class sriVector {
 public:
 	int size;
@@ -28,16 +28,15 @@ public:
 			_arr[i] = rhs._arr[i];
 		}
 	}
-
+	
 	// Move Constructor - inexpensive shallow copy
-	/*
 	sriVector(sriVector&& rhs)  // rvalue reference as the paramenter
 	{
 		size = rhs.size;
 		_arr = rhs._arr;
 		rhs._arr = nullptr;
 	}
-	*/
+
 	// Destructor
 	~sriVector() { 
 		delete [] _arr; // destroys local v's -> { _arr=0x0105a3d0 {0} }
@@ -46,60 +45,76 @@ public:
 
 sriVector createSriVector()
 {
-	// 2 copies created - one from default and another from copy constructor
+	// 2 copies created - one from default and another from copy/move constructor
 	sriVector v(5); // calls default constructor;         v -> {size=5 _arr=0x0105a3d0 {0} }
-	return v;       // calls deep copy constructor; tempObj -> {size=5 _arr=0x01050578 {0} }
-					// calls destructor and clears local v's-> {_arr=0x0105a3d0 {0} }
-}
+	return v;		// calls copy/move constructor; tempObj -> {size=5 _arr=0x01050578 {0} }					
+}					// calls destructor and clears local v's-> {_arr=0x0105a3d0 {0} }
 
 // 1 copy created because of function's pass by value
 void foo(sriVector x) // v	{size=5 _arr=0x0105a3d0 {0} }	
 {
 	// do something
-	int a = 2;
-					// calls destructor and clears local x's-> {_arr=0x01050578 {0} }
-}
+	int a = 2;					
+}						// calls destructor and clears local x's-> {_arr=0x01050578 {0} }
 
+void foo_ref(sriVector& x) // No copy operation bcos pass by reference
+{
+	// do something
+	int a = 2;					
+}							// calls destructor
+
+// Pass by Lvalue (explicit extra variable used) -  Copy Constructor
+// Pass by Rvalue (internal temp object)         -  Move Constructor
 int main()
 {
-	// Method 1: Passing object using extra variable - reusable. 3 Object copies take place.
-	// 1. by Default constructor but destroyed when the createSriVector goes out of scope
-	// 2. by Copy constructor when returning the object from the function createSriVector
-	// 3. by Copy constructor when passing the object from the function foo
-	sriVector reusable = createSriVector();  // 2 Object Creation , 1 Object destroy from step 1.
-	foo(reusable); // 1 Object Creation, 1 Object destroy from step 3.
+	// 1. NO MOVE CONSTRUCTOR and EXTRA VARIABLE USED ON FUNCTION PASS BY VALUE
+	// createSriVector():	1. Default Constructor
+	//						2. Copy Constructor - When an object is returned from a function by value.
+	//						3. Destructor
+	sriVector reusable = createSriVector();
+	// foo():				4. Copy Constructor - When passing an object by value.
+	//						5. Destructor
+	foo(reusable);			 // Pass by Lvalue - calls copy constructor
 
-	// Method 2: Passing object using internal temporary variable. 2 Object copies take place.
-	// 1. by Default constructor but destroyed when the createSriVector goes out of scope
-	// 2. by Copy constructor when returning the object from the function createSriVector
-	foo(createSriVector()); // 2 Object Creation
+	// 2. MOVE CONSTRUCTOR and EXTRA VARIABLE USED ON FUNCTION PASS BY VALUE
+	// createSriVector():	1. Default Constructor
+	//						2. Move Constructor - When an object is returned from a function by value.
+	//						3. Destructor - local object destruction on function out of scope
+	sriVector reusable = createSriVector();
+	// foo():				4. Copy Constructor - When passing an object by value.
+	//						5. Destructor
+	foo(reusable); // Pass by Lvalue
 
+	// Force to change Lvalue to Rvalue
+	foo(std::move(reusable));// Pass by Rvalue - calls move constructor. 
+							 // reusable is destroyed here
 
+	// 3. NO MOVE CONSTRUCTOR and INTERNAL TEMP USED ON FUNCTION PASS BY VALUE
+	// createSriVector():	1. Default Constructor
+	//						2. Copy Constructor - When an object is returned from a function by value.
+	//						3. Destructor 
+	// foo():
+	//						4. Destructor
+	foo(createSriVector()); // Pass by Rvalue - Calls move constructor
 
-    ///////////////// 1 new objects is created ///////////////////
-	// Again another new object is constructed by calling the copy constructor 
-	// instead of reusing the existing one
-	foo(reusable); // calls deep copy constructor
+	foo_ref(createSriVector()); // Calls no constructor bcos it's pass by reference
 
-	// Method 2: Passing object using internal temporary variable. 2 Object copies take place.
-	// 1. by Default constructor but destroyed when the createSriVector goes out of scope
-	// 2. by Copy constructor when returning the object from the function createSriVector
-	// createSriVector() returns rvalue that's a temporary object, then
-	// deep copy construct called for creating another copy of the temporary object 
-	foo(createSriVector());
-
-	////////////////////////////////////////////
-	sriVector v(5); // default constructor
-	for (int i = 0; i < v.size; ++i)
-		std::cout << v._arr[i] << " ";
-	sriVector dCopy(v); // deep copy constructor
-	for (int i = 0; i < dCopy.size; ++i)
-		std::cout << dCopy._arr[i] << " ";
+	// 4. MOVE CONSTRUCTOR and INTERNAL TEMP USED ON FUNCTION PASS BY VALUE
+	// createSriVector():	1. Default Constructor
+	//						2. Move Constructor - When an object is returned from a function by value.
+	//						3. Destructor 
+	// foo():
+	//						4. Destructor
+	foo(createSriVector()); // Pass by Rvalue
 
 	return 0;
 }
 
+	sriVector(const sriVector& rhs) // Copy Constructor
+	sriVector(sriVector&& rhs)	    // Move Constructor
 
+	sriVector& operator=(const sriVector& rhs) // Copy assignment Operator
+	sriVector& operator=(sriVector&& rhs)      // Move assignment Operator
 
 
 
@@ -173,6 +188,277 @@ int main()
 
 
 #else
+#include <iostream>
+
+Move Constructor / Move Assignment Operator :
+Avoids costly and unnecessary deep copying.
+1. Particularly powerful when both passing by value / reference are needed.
+2. Not needed for the case function objects are only passed by reference.
+
+sriVector(const sriVector& rhs) // Copy Constructor
+sriVector(sriVector&& rhs)	    // Move Constructor
+
+sriVector& operator=(const sriVector& rhs) // Copy assignment Operator
+sriVector& operator=(sriVector&& rhs)      // Move assignment Operator
+
+
+
+class sriVector {
+public:
+	int size;
+	int* _arr; // A big array
+
+			   // Default constructor
+	sriVector(int sz) {
+		size = sz;
+		_arr = new int[size];
+		for (int i = 0; i < size; ++i) {
+			_arr[i] = i * 10;
+		}
+	}
+
+	// Copy Constructor - Deep copy
+	// Copy constructor is called on three instances
+	// 1. When instantiating one object and initializing it with values from another object.
+	// 2. When passing an object by value.
+	// 3. When an object is returned from a function by value.
+	sriVector(const sriVector& rhs) {
+		size = rhs.size;
+		_arr = new int[size];
+		for (int i = 0; i < size; ++i) {
+			_arr[i] = rhs._arr[i];
+		}
+	}
+
+	// Move Constructor - inexpensive shallow copy
+	sriVector(sriVector&& rhs)  // rvalue reference as the paramenter
+	{
+		size = rhs.size;
+		_arr = rhs._arr;
+		rhs._arr = nullptr;
+	}
+
+	// Destructor
+	~sriVector() {
+		delete[] _arr; // destroys local v's -> { _arr=0x0105a3d0 {0} }
+	}
+};
+
+sriVector createSriVector()
+{
+	// 2 copies created - one from default and another from copy/move constructor
+	sriVector v(5); // calls default constructor;         v -> {size=5 _arr=0x0105a3d0 {0} }
+	return v;		// calls copy/move constructor; tempObj -> {size=5 _arr=0x01050578 {0} }					
+}					// calls destructor and clears local v's-> {_arr=0x0105a3d0 {0} }
+
+					// 1 copy created because of function's pass by value
+void foo(sriVector x) // v	{size=5 _arr=0x0105a3d0 {0} }	
+{
+	// do something
+	int a = 2;
+}						// calls destructor and clears local x's-> {_arr=0x01050578 {0} }
+
+void foo_ref(sriVector& x) // No copy operation bcos pass by reference
+{
+	// do something
+	int a = 2;
+}							// calls destructor
+
+							// Pass by Lvalue (explicit extra variable used) -  Copy Constructor
+							// Pass by Rvalue (internal temp object)         -  Move Constructor
+int main()
+{
+	// 1. NO MOVE CONSTRUCTOR and EXTRA VARIABLE USED ON FUNCTION PASS BY VALUE
+	// createSriVector():	1. Default Constructor
+	//						2. Copy Constructor - When an object is returned from a function by value.
+	//						3. Destructor
+	sriVector reusable = createSriVector();
+	// foo():				4. Copy Constructor - When passing an object by value.
+	//						5. Destructor
+	foo(reusable);			 // Pass by Lvalue - calls copy constructor
+
+							 // 2. MOVE CONSTRUCTOR and EXTRA VARIABLE USED ON FUNCTION PASS BY VALUE
+							 // createSriVector():	1. Default Constructor
+							 //						2. Move Constructor - When an object is returned from a function by value.
+							 //						3. Destructor - local object destruction on function out of scope
+	sriVector reusable = createSriVector();
+	// foo():				4. Copy Constructor - When passing an object by value.
+	//						5. Destructor
+	foo(reusable); // Pass by Lvalue
+
+				   // Force to change Lvalue to Rvalue
+	foo(std::move(reusable));// Pass by Rvalue - calls move constructor. 
+							 // reusable is destroyed here
+
+							 // 3. NO MOVE CONSTRUCTOR and INTERNAL TEMP USED ON FUNCTION PASS BY VALUE
+							 // createSriVector():	1. Default Constructor
+							 //						2. Copy Constructor - When an object is returned from a function by value.
+							 //						3. Destructor 
+							 // foo():
+							 //						4. Destructor
+	foo(createSriVector()); // Pass by Rvalue - Calls move constructor
+
+	foo_ref(createSriVector()); // Calls no constructor bcos it's pass by reference
+
+								// 4. MOVE CONSTRUCTOR and INTERNAL TEMP USED ON FUNCTION PASS BY VALUE
+								// createSriVector():	1. Default Constructor
+								//						2. Move Constructor - When an object is returned from a function by value.
+								//						3. Destructor 
+								// foo():
+								//						4. Destructor
+	foo(createSriVector()); // Pass by Rvalue
+
+	return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#include <iostream>
+class sriVector {
+public:
+	int size;
+	int* _arr; // A big array
+
+			   // Default constructor
+	sriVector(int sz) {
+		size = sz;
+		_arr = new int[size];
+		for (int i = 0; i < size; ++i) {
+			_arr[i] = i * 10;
+		}
+	}
+
+	// Copy Constructor - Deep copy
+	// Copy constructor is called on three instances
+	// 1. When instantiating one object and initializing it with values from another object.
+	// 2. When passing an object by value.
+	// 3. When an object is returned from a function by value.
+	sriVector(const sriVector& rhs) {
+		size = rhs.size;
+		_arr = new int[size];
+		for (int i = 0; i < size; ++i) {
+			_arr[i] = rhs._arr[i];
+		}
+	}
+
+	// Move Constructor - inexpensive shallow copy
+	sriVector(sriVector&& rhs)  // rvalue reference as the paramenter
+	{
+		size = rhs.size;
+		_arr = rhs._arr;
+		rhs._arr = nullptr;
+	}
+
+	// Destructor
+	~sriVector() {
+		delete[] _arr; // destroys local v's -> { _arr=0x0105a3d0 {0} }
+	}
+};
+
+sriVector createSriVector()
+{
+	// 2 copies created - one from default and another from copy constructor
+	sriVector v(5); // calls default constructor;         v -> {size=5 _arr=0x0105a3d0 {0} }
+	return v;       // calls deep copy constructor; tempObj -> {size=5 _arr=0x01050578 {0} }
+					// calls destructor and clears local v's-> {_arr=0x0105a3d0 {0} }
+}
+
+// 1 copy created because of function's pass by value
+void foo(sriVector x) // v	{size=5 _arr=0x0105a3d0 {0} }	
+{
+	// do something
+	int a = 2;
+	// calls destructor and clears local x's-> {_arr=0x01050578 {0} }
+}
+
+int main()
+{
+	// 1. NO MOVE CONSTRUCTOR and EXTRA VARIABLE USED ON FUNCTION PASS BY VALUE
+	// createSriVector():	1. Default Constructor
+	//						2. Copy Constructor - When an object is returned from a function by value.
+	//						3. Destructor
+	sriVector reusable = createSriVector();
+	// foo():				4. Copy Constructor - When passing an object by value.
+	//						5. Destructor
+	foo(reusable);
+
+	// 2. MOVE CONSTRUCTOR and EXTRA VARIABLE USED ON FUNCTION PASS BY VALUE
+	// createSriVector():	1. Default Constructor
+	//						2. Move Constructor - When an object is returned from a function by value.
+	//						3. Destructor - local object destruction on function out of scope
+	sriVector reusable = createSriVector();
+	// foo():				4. Copy Constructor - When passing an object by value.
+	//						5. Destructor
+	foo(reusable);
+
+	// 3. NO MOVE CONSTRUCTOR and INTERNAL TEMP USED ON FUNCTION PASS BY VALUE
+	// createSriVector():	1. Default Constructor
+	//						2. Copy Constructor - When an object is returned from a function by value.
+	//						3. Destructor 
+	// foo():
+	//						4. Destructor
+	foo(createSriVector());
+
+
+	// 4. MOVE CONSTRUCTOR and INTERNAL TEMP USED ON FUNCTION PASS BY VALUE
+	// createSriVector():	1. Default Constructor
+	//						2. Move Constructor - When an object is returned from a function by value.
+	//						3. Destructor 
+	// foo():
+	//						4. Destructor
+	foo(createSriVector());
+
+
+
+
+	// Method 1: Passing object using extra variable(reusable). 3 Object copies take place.
+	// 1. by Default constructor but destroyed when the createSriVector goes out of scope
+	// 2. by Copy constructor when returning the object from the function createSriVector
+	// 3. by Copy constructor when passing the object from the function foo
+	// sriVector reusable = createSriVector();  // 2 Object Creation , 1 Object destroy from step 1.
+	// foo(reusable); // 1 Object Creation, 1 Object destroy from step 3.
+
+	// Method 2:
+	// createSriVector():
+	//	1. Call default constructor for object construction
+	//  2. Calls move constructor instead of copy constructor on returning object from the function. 
+	//     So temp object quickly shallow copied and returned to the caller
+	// sriVector reusable = createSriVector();  // 2 Object Creation , 1 Object destroy from step 1.
+	// foo(reusable); // 1 Object Creation, 1 Object destroy from step 3.
+
+	// Method 2: Passing object using internal temporary variable. 2 Object copies take place.
+	// 1. by Default constructor but destroyed when the createSriVector goes out of scope
+	// 2. by Copy constructor when returning the object from the function createSriVector
+	// No copy constructor gets called when passing by value of temp object but temp object gets
+	// destroyed on the exit of function definition foo 
+	//foo(createSriVector()); // 2 Object Creation, 2 Object destroy from step 1.
+
+
+
+	///////////////// 1 new objects is created ///////////////////
+	// Again another new object is constructed by calling the copy constructor 
+	// instead of reusing the existing one
+	//foo(reusable); // calls deep copy constructor
+
+	// Method 2: Passing object using internal temporary variable. 2 Object copies take place.
+	// 1. by Default constructor but destroyed when the createSriVector goes out of scope
+	// 2. by Copy constructor when returning the object from the function createSriVector
+	// createSriVector() returns rvalue that's a temporary object, then
+	// deep copy construct called for creating another copy of the temporary object 
+	// foo(createSriVector());
+
+	////////////////////////////////////////////
+	// sriVector v(5); // default constructor
+	// for (int i = 0; i < v.size; ++i)
+	// 	std::cout << v._arr[i] << " ";
+	// sriVector dCopy(v); // deep copy constructor
+	// for (int i = 0; i < dCopy.size; ++i)
+	// 	std::cout << dCopy._arr[i] << " ";
+
+	return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Function overload by lvalue and rvalue references
 void print(int& i)  { std::cout<< " lvalue reference " << i << std::endl; }
