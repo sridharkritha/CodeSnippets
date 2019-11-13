@@ -1,5 +1,177 @@
 #if 1
 #include <iostream>
+// Reference: C++ 11: Rvalue Reference -- Move Semantics
+// https://www.youtube.com/watch?v=IOkgBrXCtfo&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=3
+
+int main()
+{
+	/////////////////////////////////
+	// 
+	/////////////////////////////////
+	// C++ 03 -  
+	
+
+	// C++ 11 - 	
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+#include <iostream>
+
+int main()
+{
+	/////////////////////////////////
+	// 
+	/////////////////////////////////
+	// C++ 03 -  
+	
+
+	// C++ 11 - 	
+
+	return 0;
+}
+
+*/
+
+
+
+
+
+
+
+#else
+// Ref: C++ 11: Rvalue Reference - Argument Perfect Forwarding
+// https://www.youtube.com/watch?v=0xcCNnWEMgs&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=4
+
+#include <iostream>
+void foo(sriVector arg); // sriVector has both Move constructor and Copy constructor
+
+int main()
+{
+	sriVector reusable = createSriVector();
+	relay(reusable); 		 // passing Lvalue - Calls Copy constructor
+	relay(createSriVector()); // passing Rvalue - Calls Move constructor
+
+	return 0;
+}
+
+// Argument Forwarding
+template<typename T>
+void relay(T arg) {
+	// Argument Forwarding - forwarding the 'arg' from 'relay' to 'foo' but there is no guarantee of without any type change.
+	foo(arg);
+}
+
+// Argument Perfect Forwarding - used to avoid costly and unnecessary copy construction
+template<typename T>
+void relay(T&& arg) {
+	// Argument Perfect Forwarding - forwarding the 'arg' from 'relay' to 'foo' without any type change.
+	// Rvalue is forwarded as Rvalue and Lvalue is forwarded as Lvalue.
+	// relay(reusable)         => arg is Lvalue
+	// relay(createSriVector()) => arg is Rvalue
+
+	foo(std::forward<T> (arg));
+}
+
+// Implementation of std::forward()
+template<class T>
+T&& forward(typename remove_reference<T>::type& arg) {
+	return static_cast<T&&> (arg);
+}
+
+// standard library - remove_reference example
+template<class T>
+struct remove_reference; // It removes reference on type T
+remove_reference<int&>::type i; // T is int& => int i
+remove_reference<int>::type i;  // T is int  => int i
+
+
+
+
+
+/*
+Reference collapsing rule for Type deduction (C++ 11):
+1. T& &   => T&
+2. T& &&  => T&
+3. T&& &  => T&
+4. T&& && => T&&
+*/
+
+// Rvalue to Rvalue reference
+	// T&& variable is initialized with Rvalue => Rvalue reference
+	relay(9) => relay(T&&);
+	T => int&&  // passing Rvalue
+	T&& => int&& && => int&& (Rvalue reference)
+
+// Lvalue to Lvalue reference
+	// T&& variable is initialized with Lvalue => Lvalue reference
+	relay(x) => relay(T&&); // regardless of x is Lvalue of integer or integer reference
+	T => int&  // passing Lvalue
+	T&& => int& && => int& (Lvalue reference)
+
+Note: 
+/*
+	1. Rvalue reference is always in the form T&&.
+	2. Not all T&& is a Rvalue.
+	3. All regular T&& is a Rvalue. ex: int&&, float&&
+	4. Template T&& is not always Rvalue.
+	5. T&& can be an Universal reference which takes Rvalue, Lvalue, const, non-const etc.,
+	   only if 'T' is a Function Template type, not a regular data type or class template type.
+*/
+
+
+
+
+
+Difference between std::move() and std::forward() ?
+	std::move<T>(arg);    // Turns arg into an Rvalue type
+	std::forward<T>(arg); // Turns arg into an T&&
+///////////////////////////////////////////////////////////////////////////
+#include <iostream>
 // Ref: Advanced C++: Understanding rvalue and lvalue
 // https://www.youtube.com/watch?v=UTUdhjzws5g&list=PLE28375D4AC946CC3&index=20
 
@@ -93,75 +265,7 @@ dog().bark(); 	// bark() may change the state of default constructor dog() which
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-#include <iostream>
-
-int main()
-{
-	/////////////////////////////////
-	// 
-	/////////////////////////////////
-	// C++ 03 -  
-	
-
-	// C++ 11 - 	
-
-	return 0;
-}
-
-*/
-
-
-
-
-
-
-
-#else
+//////////////////////////////////////////////////////////////////////////////////
 #include <iostream>
 
 class sriVector {
