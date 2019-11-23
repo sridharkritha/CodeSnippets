@@ -1,5 +1,11 @@
 #if 1
 
+
+
+
+
+
+
 /*
 
 #include <iostream>
@@ -26,6 +32,146 @@ int main()
 
 
 #else
+
+
+// Ref: C++ 11 Library: Unique Pointers
+// https://www.youtube.com/watch?v=YeI6V2O5BFE&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=10
+#include <iostream>
+#include <memory>
+#include <string>
+using namespace std;
+
+// Unique Pointers (Replaced auto_ptr in C++ 03): 
+// 1. exclusive owenership of an object.
+// 2. light weight smart pointer
+
+class Dog {
+	// Can also be used as a member 
+	// unique_ptr<Bone> pB;  // instead of Bone* pB; Bcos it prevents memory leak even constructor fails.
+	public:
+		string m_name;
+		void bark() { cout << "Dog " << m_name << " rules!" << endl; }
+		Dog() { cout << "Nameless dog created." << endl; m_name = "nameless"; }
+		Dog(string name) { cout << "Dog is created: " << name << endl; m_name = name; }
+		~Dog() { cout << "dog is destroyed: " << m_name << endl; }
+};
+
+/*
+Output:	Dog is created: Gunner
+		Dog Gunner rules!
+		dog is destroyed: Gunner
+*/
+void test() {
+	unique_ptr<Dog> pD(new Dog("Gunner"));
+	pD->bark();
+}
+
+void deallocate() {
+	// release
+	// Output:	Dog is created: Release
+	// 			Dog Release rules!
+	// 			pRls is empty.   (NOTE: Object is not deleted on out of scope)
+	unique_ptr<Dog> pRls(new Dog("Release"));
+	pRls->bark();
+
+	// 1. Like shared pointer 'get()', 'release()' return the raw pointer, using that pointer you can delete the object explicitly
+	// 2. Unlike shared pointer 'get()', 'release()' releases its object ownership, so no more it's responsobility to delete the
+	// object when it goes out of scope	
+	Dog* p = pRls.release();
+	if (!pRls)  cout << "pRls is empty.\n";
+	else        cout << "pRls is not empty.\n";
+
+	// reset (or) nullptr
+	// Output:	Dog is created: Reset
+	// 			Dog Reset rules!
+	// 			dog is destroyed: Reset
+	// 			pRst is empty.
+	unique_ptr<Dog> pRst(new Dog("Reset"));
+	pRst->bark();
+	// delete the pointed object at the point of call and then reset the pointer to nullptr.
+	pRst.reset(); // (or) pRst = nullptr;
+	if (!pRst)  cout << "pRst is empty.\n";
+	else        cout << "pRst is not empty.\n";
+
+	// reset to another new object:
+	// Output:	Dog is created: Reset
+	// 			Dog Reset rules!
+	// 			Dog is created: Smokey
+	// 			dog is destroyed: Reset
+	// 			pRstAssg is not empty.
+	// 			dog is destroyed: Smokey
+	unique_ptr<Dog> pRstAssg(new Dog("Reset"));
+	pRstAssg->bark();
+	// delete the last pointer object at the point of call and acquire a new ownership of another object 
+	pRstAssg.reset(new Dog("Smokey"));
+	if (!pRstAssg)  cout << "pRstAssg is empty.\n";
+	else            cout << "pRstAssg is not empty.\n";
+
+	// move - transferring ownership from one unique pointer to another
+	// Output:	Dog is created: MoveOne
+	// 			Dog is created: MoveTwo
+	// 			Dog MoveOne rules!
+	// 			dog is destroyed: MoveOne
+	// 			Dog MoveTwo rules!
+	unique_ptr<Dog> pM1(new Dog("MoveOne"));
+	unique_ptr<Dog> pM2(new Dog("MoveTwo"));
+	pM1->bark();
+
+	// 1. pM1 owns MoveTwo.
+	// 2. pM2 becomes empty.
+	// 3. MoveOne is destroyed.
+	pM1 = move(pM2);
+	pM1->bark();
+}
+
+void f(unique_ptr<Dog> p)
+{
+	// Output:	Dog PassingUniquePointer rules!
+	p->bark();
+} // NOTE: dog is destroyed here. Prints => dog is destroyed : PassingUniquePointer
+
+unique_ptr<Dog> getDog()
+{
+	// Output:	Dog is created : ReturningUniquePointer
+	unique_ptr<Dog> p(new Dog("ReturningUniquePointer"));
+	return p; // NOTE: move is not needed bcos it is pass by value automatically move semantics invoked
+} // NOTE: dog is NOT destroyed here
+
+void func()
+{
+	// Output:	Dog is created : PassingUniquePointer	
+	unique_ptr<Dog> pPassing(new Dog("PassingUniquePointer"));
+	// NOTE: move is needed
+	f(move(pPassing)); // NOTE: dog object is NOT destroyed here. Passing by address NOT by value
+	// pPassing is empty.
+	if(!pPassing) cout << "pPassing is empty.\n";
+
+	unique_ptr<Dog> pReturning = getDog();
+} // NOTE: ReturningUniquePointer object is destroyed here. Prints => dog is destroyed: ReturningUniquePointer
+
+// Output(2 times):	Nameless dog created.
+// 					Nameless dog created.
+// 					Nameless dog created.
+// 					dog is destroyed : nameless
+// 					dog is destroyed : nameless
+// 					dog is destroyed : nameless
+void arrayOfObjDelection() // Deleting array of objects
+{
+	// shared pointer needs user defined delete function
+	shared_ptr<Dog> pS(new Dog[3], [](Dog* p) {delete[] p;});
+
+	// unique pointer DON'T need any user defined delet function
+	unique_ptr<Dog[]> pU(new Dog[3]);
+}
+
+int main ()
+{
+	// func();
+	arrayOfObjDelection();
+	return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: C++ 11 Library: Weak Pointers
 // https://www.youtube.com/watch?v=EWoMjuN5OH4&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=9
 
