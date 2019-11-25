@@ -1,11 +1,6 @@
 #if 1
 
 
-
-
-
-
-
 /*
 
 #include <iostream>
@@ -32,8 +27,72 @@ int main()
 
 
 #else
+// Ref: https://stackoverflow.com/questions/2275076/is-stdvector-copying-the-objects-with-a-push-back
+std::vector makes a copy of an object you want to push_back.
+A vector cannot keep a reference or a pointer of an object without a copy ?
 
+Objects are values. Assignment makes a copy. T
 
+std::vector<T>::push_back(argument) -  creates a copy of the argument and stores it in the vector. 
+
+If you want to store pointers to objects in your vector, create a std::vector<whatever*> instead of std::vector<whatever>.
+However, you need to make sure that the objects referenced by the pointers remain valid while the vector holds a reference 
+to them (smart pointers utilizing the RAII idiom solve the problem).
+
+Since C++11, push_back will perform a 'move' instead of a 'copy' if the argument is an 'rvalue reference'. 
+(Objects can be converted to 'rvalue references' with std::move().)
+
+From C++11 onwards, all the standard containers (std::vector, std::map, etc) support move semantics, meaning that you 
+can now pass rvalues to standard containers and avoid a copy:
+
+// Example object class.
+class object
+{
+	private:
+	int             m_val1;
+	std::string     m_val2;
+
+	public:
+	object(int val1, std::string &&val2) : m_val1(val1), m_val2(std::move(val2))  { }
+};
+
+std::vector<object> myList;
+
+// #1 Copy into the vector.
+object foo1(1, "foo");
+myList.push_back(foo1);
+
+// #2 Move temporary into vector (no copy).
+myList.push_back(object(453, "baz"));
+
+// #3 Move into the vector (no copy).
+object foo2(1024, "bar");
+myList.push_back(std::move(foo2));
+
+// #4 Create instance of object directly inside the vector (no copy, no move).
+myList.emplace_back(453, "qux");
+Alternatively you can use various smart pointers to get mostly the same effect:
+
+// Using - std::unique_ptr
+std::vector<std::unique_ptr<object>> myPtrList;
+
+// #5a unique_ptr can NOT be copied only be 'moved'.
+auto pFoo = std::make_unique<object>(1, "foo");
+myPtrList.push_back(std::move(pFoo));
+
+// #5b unique_ptr can NOT be copied only be 'moved'.
+myPtrList.push_back(std::make_unique<object>(1, "foo"));
+std::shared_ptr example
+
+// Using - std::shared_ptr
+std::vector<std::shared_ptr<object>> objectPtrList2;
+
+// #6 shared_ptr can be used to retain a copy of the pointer and update both the vector value and the local copy simultaneously.
+auto pFooShared = std::make_shared<object>(1, "foo");
+objectPtrList2.push_back(pFooShared);
+// Pointer to object stored in the vector, but pFooShared is still valid.
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: C++ 11 Library: Unique Pointers
 // https://www.youtube.com/watch?v=YeI6V2O5BFE&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=10
 #include <iostream>
