@@ -1,5 +1,42 @@
 #if 1
 
+
+
+
+
+
+
+
+
+
+
+/*
+
+#include <iostream>
+
+int main()
+{
+	/////////////////////////////////
+	// 
+	/////////////////////////////////
+	// C++ 03 -  
+	
+
+	// C++ 11 - 	
+
+	return 0;
+}
+
+*/
+
+
+
+
+
+
+
+#else
+
 /* 
 Regular Expression:  pattern "match" strings of text.
 The C++ standard library supports multiple regular expression grammars.
@@ -11,51 +48,53 @@ grep                 - Unix grep
 egrep                - Unix extended grep
 
 */
+// Ref: C++ 11 Library: Regular Expression 1
+// https://www.youtube.com/watch?v=v_8rdQjOuxw&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=13&t=0s
 #include <iostream>
 #include <regex>
 using namespace std;
 
-#if 0
+
 // Checking pattern is exist or not
-int main() {
-string str;
-	while (true) {
-		cin >> str;
+	int main() {
+	string str;
+		while (true) {
+			cin >> str;
 
-		regex e("abc");
+			regex e("abc");
 
-		// entire string match is must (more strict)
-		bool isFullStringMatch = regex_match(str, e); // NO: aabc; YES - abc
+			// entire string match is must (more strict)
+			bool isFullStringMatch = regex_match(str, e); // NO: aabc; YES - abc
 
-		// any substring match is enough
-		bool isSubStringMatch  = regex_search(str, e); //  NO - Abc, azbc; YES - aabc, aaaabcccc;
-		
-		// ignore case
-		// NO: abc/n (or) abc; YES: aBcd (using regex_match)
-		regex e("abc.", regex_constants::icase); // . Any 1 character except newline
-		regex e("abc?");              // ? Zero or 1 preceding character               
-		regex e("abc*");              // *       Zero or more preceding character
-		regex e("abc+");              // +       One of more preceding character	 
-		regex e("ab[cd]*");           // [...]   Any character inside the square brackets          
-		regex e("ab[^cd]*");          // [...]   Any character not inside the square brackets
-		regex e("ab[cd]{3}");         // only 3 characters
-		regex e("ab[cd]{3,}");        // 3 or more characters
-		regex e("ab[cd]{3,5}");       // 3,4 or 5 characters 
-		regex e("abc|de[fg]");        // | - Or	  
-		regex  e("(abc)de+\\1");      // \1 - First group, abcdeeabc
-		regex  e("(ab)c(de+)\\2\\1"); // abcdeeedeeeab
-		// email filter - sridharkritha@gmail.com
-		regex e("[[:w:]]+@[[:w:]]+\.com"); // [[:w:]] word character: digit, number, or underscore
+			// any substring match is enough
+			bool isSubStringMatch  = regex_search(str, e); //  NO - Abc, azbc; YES - aabc, aaaabcccc;
+			
+			// ignore case
+			// NO: abc/n (or) abc; YES: aBcd (using regex_match)
+			regex e("abc.", regex_constants::icase); // . Any 1 character except newline
+			regex e("abc?");              // ? Zero or 1 preceding character               
+			regex e("abc*");              // *       Zero or more preceding character
+			regex e("abc+");              // +       One of more preceding character	 
+			regex e("ab[cd]*");           // [...]   Any character inside the square brackets          
+			regex e("ab[^cd]*");          // [...]   Any character not inside the square brackets
+			regex e("ab[cd]{3}");         // only 3 characters
+			regex e("ab[cd]{3,}");        // 3 or more characters
+			regex e("ab[cd]{3,5}");       // 3,4 or 5 characters 
+			regex e("abc|de[fg]");        // | - Or	  
+			regex  e("(abc)de+\\1");      // \1 - First group, abcdeeabc
+			regex  e("(ab)c(de+)\\2\\1"); // abcdeeedeeeab
+			// email filter - sridharkritha@gmail.com
+			regex e("[[:w:]]+@[[:w:]]+\.com"); // [[:w:]] word character: digit, number, or underscore
 
-		regex e("abc.$");                  // $  string should 'end'   with abc.; zwerabcq
-		// .+ One or more preceeding characters
-		// Change the regular expression grammar to grep
-		regex e("^abc.+", regex_constants::grep | regex_constants::icase); // ^  string should 'begin' with abc;
-		// NO: abczy; YES: abcz+ (+ has no special meaning in grep unlike ECMAScript grammar)
+			regex e("abc.$");                  // $  string should 'end'   with abc.; zwerabcq
+			// .+ One or more preceeding characters
+			// Change the regular expression grammar to grep
+			regex e("^abc.+", regex_constants::grep | regex_constants::icase); // ^  string should 'begin' with abc;
+			// NO: abczy; YES: abcz+ (+ has no special meaning in grep unlike ECMAScript grammar)
 
-		cout << (isFullStringMatch ? "Matched" : "Not matched") << endl << endl;
+			cout << (isFullStringMatch ? "Matched" : "Not matched") << endl << endl;
+		}
 	}
-}
 
 // Replace the source string by group
 int main() {
@@ -120,24 +159,26 @@ int main() {
 	}
 }
 
-/*
-Matched:  sridhar@yahoo.com
-user name: sridhar
-Domain: yahoo
 
-Matched:  raman@gmail.com
-user name: raman
-Domain: gmail
+	Matched:  sridhar@yahoo.com
+	user name: sridhar
+	Domain: yahoo
 
-Matched:  kavitha@hotmail.com
-user name: kavitha
-Domain: hotmail
-*/
+	Matched:  raman@gmail.com
+	user name: raman
+	Domain: gmail
 
-#endif
+	Matched:  kavitha@hotmail.com
+	user name: kavitha
+	Domain: hotmail
+
+
+
 
 
 /**************** Regex Token Iterator ******************/
+// Ref: C++ 11 Library: Regular Expression 3 -- Iterators
+// https://www.youtube.com/watch?v=_79j_-2xMrQ&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=14
 int main() {
 
 	string str = "<email>...sridhar@yahoo.com,###  ##raman@gmail.com,;;;;  ;;;;kavitha@hotmail.com;;;;<end>";
@@ -156,75 +197,13 @@ int main() {
 	return 0;
 }
 
-/*
-Matched:  sridhar@yahoo.com
-Matched:  raman@gmail.com
-Matched:  kavitha@hotmail.com
-*/
+
+	Matched:  sridhar@yahoo.com
+	Matched:  raman@gmail.com
+	Matched:  kavitha@hotmail.com
 
 
-
-
-#if 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#endif 
-
-
-
-
-
-/*
-
-#include <iostream>
-
-int main()
-{
-	/////////////////////////////////
-	// 
-	/////////////////////////////////
-	// C++ 03 -  
-	
-
-	// C++ 11 - 	
-
-	return 0;
-}
-
-*/
-
-
-
-
-
-
-
-#else
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: https://stackoverflow.com/questions/2275076/is-stdvector-copying-the-objects-with-a-push-back
 std::vector makes a copy of an object you want to push_back.
 A vector cannot keep a reference or a pointer of an object without a copy ?
