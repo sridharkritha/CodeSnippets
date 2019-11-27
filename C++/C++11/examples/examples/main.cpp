@@ -1,5 +1,203 @@
 #if 1
 
+/* 
+Regular Expression:  pattern "match" strings of text.
+The C++ standard library supports multiple regular expression grammars.
+ECMAScript (default) - grammar used by JavaScript and the .NET languages.(More powerful)
+basic                - POSIX basic regular expressions 
+extended             - POSIX extended regular expressions 
+awk                  - Unix awk
+grep                 - Unix grep
+egrep                - Unix extended grep
+
+*/
+#include <iostream>
+#include <regex>
+using namespace std;
+
+#if 0
+// Checking pattern is exist or not
+int main() {
+string str;
+	while (true) {
+		cin >> str;
+
+		regex e("abc");
+
+		// entire string match is must (more strict)
+		bool isFullStringMatch = regex_match(str, e); // NO: aabc; YES - abc
+
+		// any substring match is enough
+		bool isSubStringMatch  = regex_search(str, e); //  NO - Abc, azbc; YES - aabc, aaaabcccc;
+		
+		// ignore case
+		// NO: abc/n (or) abc; YES: aBcd (using regex_match)
+		regex e("abc.", regex_constants::icase); // . Any 1 character except newline
+		regex e("abc?");              // ? Zero or 1 preceding character               
+		regex e("abc*");              // *       Zero or more preceding character
+		regex e("abc+");              // +       One of more preceding character	 
+		regex e("ab[cd]*");           // [...]   Any character inside the square brackets          
+		regex e("ab[^cd]*");          // [...]   Any character not inside the square brackets
+		regex e("ab[cd]{3}");         // only 3 characters
+		regex e("ab[cd]{3,}");        // 3 or more characters
+		regex e("ab[cd]{3,5}");       // 3,4 or 5 characters 
+		regex e("abc|de[fg]");        // | - Or	  
+		regex  e("(abc)de+\\1");      // \1 - First group, abcdeeabc
+		regex  e("(ab)c(de+)\\2\\1"); // abcdeeedeeeab
+		// email filter - sridharkritha@gmail.com
+		regex e("[[:w:]]+@[[:w:]]+\.com"); // [[:w:]] word character: digit, number, or underscore
+
+		regex e("abc.$");                  // $  string should 'end'   with abc.; zwerabcq
+		// .+ One or more preceeding characters
+		// Change the regular expression grammar to grep
+		regex e("^abc.+", regex_constants::grep | regex_constants::icase); // ^  string should 'begin' with abc;
+		// NO: abczy; YES: abcz+ (+ has no special meaning in grep unlike ECMAScript grammar)
+
+		cout << (isFullStringMatch ? "Matched" : "Not matched") << endl << endl;
+	}
+}
+
+// Replace the source string by group
+int main() {
+	// regex_replace
+	string str = "...sridhar@yahoo.com,###  ##raman@gmail.com,;;;;  ;;;;kavitha@hotmail.com;;;;";
+
+	regex e("([[:w:]]+)@([[:w:]]+)\.com");
+
+	// ...sridhar is on yahoo,###  ##raman is on gmail,;;;;  ;;;;kavitha is on hotmail;;;;
+	cout << regex_replace(str, e, "$1 is on $2");
+	// sridhar is on yahooraman is on gmailkavitha is on hotmail
+	cout << regex_replace(str, e, "$1 is on $2", regex_constants::format_no_copy);
+	// sridhar is on yahoo
+	cout << regex_replace(str, e, "$1 is on $2", regex_constants::format_no_copy|regex_constants::format_first_only);
+
+	std::cin >> str;
+}
+
+// Extract ONE
+// Store the matched sub group strings in a container[don't do for the entire input string]
+int main() {
+	string str = "<email>...sridhar@yahoo.com,###  ##raman@gmail.com,;;;;  ;;;;kavitha@hotmail.com;;;;<end>";
+	smatch m;   // smatch (type) - stores the matched strings in a collection
+
+	regex e("([[:w:]]+)@([[:w:]]+)\.com"); // (group 1) - user name, (group 2) - domain name
+
+	bool found = regex_search(str, m, e); // extract the groups and store it
+
+
+	cout << "m.size() " << m.size() << endl; // 3 - no.of matched result
+	// m[0] = sridhar@yahoo.com, m[1] = sridhar, m[0] = yahoo
+
+	// m[0].str()  - The entire match (same with m.str(), m.str(0))
+	// m[1].str()  - The substring that matches the first group  (same with m.str(1))
+	// m[2].str()  - The substring that matches the second group
+	// m.prefix()  - Everything before the first matched character
+	// m.suffix()  - Everything after the last matched character
+
+	for (int n = 0; n< m.size(); n++) {
+		cout << "m[" << n << "]: str()=" << m[n].str() << endl; 
+	//    cout << "m[" << n << "]: str()=" << m.str(n) << endl; // alternate form
+	//    cout << "m[" << n << "]: str()=" << *(m.begin()+n) << endl; // alternate form
+	}
+	cout << "m.prefix().str(): " << m.prefix().str() << endl; // <email>...
+	cout << "m.suffix().str(): " << m.suffix().str() << endl; // ,###
+}
+
+// Extract ALL - by 1.  Regex Iterator and 2. Regex Token Iterator
+/**************** Regex Iterator ******************/
+int main() {
+	string str = "<email>...sridhar@yahoo.com,###  ##raman@gmail.com,;;;;  ;;;;kavitha@hotmail.com;;;;<end>";
+
+	regex e("([[:w:]]+)@([[:w:]]+)\.com");
+
+	sregex_iterator pos(str.cbegin(), str.cend(), e);
+	sregex_iterator end;  // Default constructor defines past-the-end iterator
+	for (; pos != end; pos++) {
+		cout << "Matched:  "  << pos->str(0) << endl;
+		cout << "user name: " << pos->str(1) << endl;
+		cout << "Domain: "    << pos->str(2) << endl;
+		cout << endl;
+	}
+}
+
+/*
+Matched:  sridhar@yahoo.com
+user name: sridhar
+Domain: yahoo
+
+Matched:  raman@gmail.com
+user name: raman
+Domain: gmail
+
+Matched:  kavitha@hotmail.com
+user name: kavitha
+Domain: hotmail
+*/
+
+#endif
+
+
+/**************** Regex Token Iterator ******************/
+int main() {
+
+	string str = "<email>...sridhar@yahoo.com,###  ##raman@gmail.com,;;;;  ;;;;kavitha@hotmail.com;;;;<end>";
+	//regex e("[[:punct:]]+");  // Printable character that is not space, digit, or letter.
+	//regex e("[ [:punct:]]+"); 
+	regex e("([[:w:]]+)@([[:w:]]+)\.com");
+
+	// 0 = full, 1 = username, 2 = domainname extracted, -1 = Unmatched remaining
+	sregex_token_iterator pos(str.cbegin(), str.cend(), e, 0); 
+	sregex_token_iterator end;  // Default constructor defines past-the-end iterator
+	for (; pos != end; pos++) {
+		cout << "Matched:  " << *pos << endl; // pos->str(); - alternate form
+	}
+	cin >> str;
+
+	return 0;
+}
+
+/*
+Matched:  sridhar@yahoo.com
+Matched:  raman@gmail.com
+Matched:  kavitha@hotmail.com
+*/
+
+
+
+
+#if 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#endif 
+
+
+
+
 
 
 
@@ -33,7 +231,42 @@ int main()
 
 #else
 
+// Ref: C++ 11: Resource Managing Class
+// https://www.youtube.com/watch?v=xtYJgPR9iCg&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=12&t=0s
 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+using namespace std;
+class Person {
+public:
+	void printName() { cout<< *pName_;}
+	Person(string name): pName_(new string (name)) { cout << "Person is created: " << *pName_ << endl; }
+	// ~Person() { cout << "Person is destroyed: " << *pName_ << endl;  delete pName_; }
+private:
+	// string* pName_;
+	// shared_ptr<string> pName_; // smart pointer solution
+	unique_ptr<string> pName_;    // light weight smart pointer solution
+	
+};
+
+int main()
+{
+	vector<Person> v;
+	// local object created but NOT destroyed 
+	v.push_back(Person("George")); // OK
+	v.emplace_back("Sridhar"); // OK
+
+	Person t("Raman");
+	// v.push_back(t);    // ERROR: Unique ptr is not copiable only movable
+	v.push_back(move(t)); // Unique ptr is not copiable only movable
+
+	v.front().printName();         // OK
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: C++ 11 Library: Unique Pointers
 // https://www.youtube.com/watch?v=YeI6V2O5BFE&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=10
 #include <iostream>
