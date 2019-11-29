@@ -93,6 +93,8 @@ int main()
 #else
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ 11 Library: Random Number Engine
+// https://www.youtube.com/watch?v=NBogC7V9-60&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=17
 #include <iostream>
 #include <random>
 #include <sstream>
@@ -129,16 +131,13 @@ int main ()
 
 /* More examples */
 void printRandom(std::default_random_engine e) {
-	for (int i=0; i<10; i++) 
-		cout << e() << " ";
+	for (int i=0; i<10; i++) cout << e() << " ";
 	cout << endl;
 }
 
 template <typename T>
 void printArray(T arr) {
-	for (auto v:arr) {
-		cout << v << " ";
-	}
+	for (auto v:arr) cout << v << " "; 
 	cout << endl;
 }
 
@@ -194,6 +193,8 @@ int main ()
 
 /* Other random engines */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ 11 Library: Clocks and Timers -- Part I
+// https://www.youtube.com/watch?v=M13otPgOePs&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=16&t=358s
 #include <iostream>
 #include <chrono> // A precision-neutral(sec, millsec, micro, nano, pico etc) library for time and date
 using namespace std;
