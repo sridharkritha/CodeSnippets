@@ -1,64 +1,14 @@
+#if 1
 
 
 
 
-#if 0
 
 
 
-/* Distribution */
-
-int main ()  {
-	// engine only provides a source of randomness
-	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-	std::default_random_engine e(seed);
-   // How to get a random number between 0 and 5?
-   //  e()%6  
-	//    -- Bad quality of randomness
-	//    -- Can only provide uniform distribution
-
-	std::uniform_int_distribution<int> distr(0,5);  // range: [0,5]  -- both 1 and 5 are included
-													// default param: [0, INT_MAX]
-	cout << " int_distribution: " << endl; 
-    for (int i=0; i<30; i++) {
-        cout << distr(e) << " ";
-    }
 
 
-	cout << "\n\n real_distribution: " << endl;
 
-	std::uniform_real_distribution<double> distrReal(0,5);  // half open: [1, 5)  -- 1 is included, 5 is not.
-														// default param: [0, 1)
-    for (int i=0; i<30; i++) {
-        cout << distrReal(e) << " ";
-    }
-
-	cout << " poisson_distribution: " << endl; 
-	std::poisson_distribution<int> distrP(1.0);  //  mean (double) 
-    for (int i=0; i<30; i++) {
-        cout << distrP(e) << " ";
-    }
-	cout << endl;	
-
-	cout << " normal_distribution: " << endl; 
-	std::normal_distribution<double> distrN(10.0, 3.0);  // mean and standard deviation
-	vector<int> v(20);
-    for (int i=0; i<800; i++) {
-        int num = distrN(e); // convert double to int
-		if (num >= 0 && num < 20)
-			v[num]++;   // E.g., v[10] records number of times 10 appeared
-    }
-	for (int i=0; i<20; i++) {
-		cout << i << ": " << std::string(v[i], '*') << endl;
-	}
-	cout << endl;
-
-	// Stop using rand()%n; 
-}
-
-/* Other distributions */
-
-#endif
 
 
 
@@ -91,6 +41,171 @@ int main()
 
 
 #else
+// Ref: C++ 11 Library: When to Use Tuple ?
+// https://www.youtube.com/watch?v=VFmyZg7zJ3s&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=20
+
+#include <iostream>
+#include <string>
+#include <map>
+#include <tuple>
+using namespace std;
+
+// tuple vs struct
+
+tuple<string, int> getNameAge() { 
+	return make_tuple("Bob", 34);
+}
+
+int main() {
+	struct Person { string name; int age; } p;
+	tuple<string, int> t;
+
+	cout << p.name << " " << p.age << endl; // more readable
+	cout << get<0>(t) << " " << get<1>(t) << endl; // not readable like struct
+
+	// Then why we need tuple ?
+	// As a one-time only structure to transfer a group of data
+	string name;
+	int age;
+	tie(name, age) = getNameAge();
+
+	// Comparison of tuples
+	tuple<int, int, int> time1, time2; // hours, minutes, seconds
+	if (time1 > time2) 
+		cout << " time1 is a later time";
+
+	// Multi index map
+	map<tuple<int,char,float>, string> mm;
+	mm[make_tuple(2, 'a', 3.4)] = "Faith will move mountains";
+	mm.insert(make_pair(make_tuple(12, 'b', 5.3), "Game start"));
+	cout << mm[make_tuple(2, 'a', 3.4)]; // Faith will move mountains
+	
+	// Little trick for swapping variable values
+	int a = 1, b = 2, c = 3;
+	tie(b, c, a) = make_tuple(a, b, c);
+	cout<< a; // 3
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ 11 Library: Tuple
+// https://www.youtube.com/watch?v=33Y_5gOyi3Y&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=19
+#include <iostream>
+#include <string>
+#include <tuple>
+using namespace std;
+
+int main() {
+	// pair - Used to store 2 different data type values as a pair
+	std::pair<int, string> p = make_pair(23, "Hello");
+	cout<< p.first << "  " << p.second <<endl;
+
+	// tuple - it can store arbitrary number of different data type values (not restricted to 2 values )
+	tuple<int, string, char> t(32, "Penny wise", 'a');
+	// tuple<int, string, char> t = {32, "Penny wise", 'a'};  // Wont compile, constructor is explicit
+
+	// get values from tuple
+	cout << get<0>(t) << endl;
+	cout << get<1>(t) << endl;
+	cout << get<2>(t) << endl;
+
+	// same get can be used to set values as well
+	get<1>(t) = "Pound foolish"; // NOTE: get() returns reference so we can change the source value
+	cout << get<1>(t) << endl;
+
+	string& s = get<1>(t);
+	s = "Patience is virtue";
+	cout << get<1>(t) << endl;
+	//get<3>(t);  // Won't compile, out of range
+
+	// Tuple can store references !!  Also Pair can. But STL containers such as vectors cannot. It always do copying the values.
+	string st = "In for a penny";
+	tuple<string&> t3(st); // reference to the string
+	//auto t3 = make_tuple(ref(st));  // Do the same thing using ref()
+
+	get<0>(t3) = "In for a pound";  // st has "In for a pound"
+	cout << st << endl;
+
+	int i = 1;
+	//get<i>(t); // Won't compile, i must be a compile time constant
+
+	tuple<int, string, char> t2;  // default construction (without initializing it)
+	t2 = tuple<int, string, char>(12, "Curiosity kills the cat", 'd'); // Need to type all the data types
+	t2 = make_tuple(12, "Curiosity kills the cat", 'd'); // No need to type all the data types
+
+	if (t > t2) {  // Lexicographical comparison
+		cout << "t is larger than t2" << endl; // 32 > 12
+		t = t2;  // member by member copying
+	}
+
+	// Extract the tuple values in other variables
+	t2 = make_tuple(12, "Curiosity kills the cat", 'd');
+
+	int x;
+	string y;
+	char z;
+	std::make_tuple(std::ref(x), std::ref(y), std::ref(z)) = t2;  // assign t2 to x, y, z
+	std::tie(x,y,z) = t2;  // same thing
+	std::tie(x, std::ignore, z) = t2;  // get<1>(t2) is ignored
+
+	// tuple value can be concatenated
+	auto t4 = std::tuple_cat( t2, t3 );  // t4 is tuple<int, string, char, string>
+	cout << get<3>(t4) << endl;  // "In for a pound" 
+
+	// type traits
+	cout << std::tuple_size<decltype(t4)>::value << endl;  // Output: 4 - Size of the 4th tuple data type
+	std::tuple_element<1, decltype(t4)>::type dd; // dd is a string
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ 11 Library: Random Number Distribution
+// https://www.youtube.com/watch?v=K2nrsQwKmHQ&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=19&t=0s
+#include <iostream>
+#include <random>
+#include <chrono>
+#include <string>
+using namespace std;
+
+/* Distribution */
+int main() {
+	// engine only provides a source of randomness
+	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+	std::default_random_engine e(seed); // range: [e.min(), e.max()]
+	cout << e() << endl; // 318240234
+
+						 // How to get a random number between 0 and 5 ?
+	cout << e() % 6 << endl;
+	// -- Bad quality of randomness
+	// -- Can only provide uniform distribution (hard to achieve normal/poisson distribution)
+
+	cout << " int_distribution: " << endl;
+	// range: [0,5]  -- both 1 and 5 are included. Not a halp open !
+	std::uniform_int_distribution<int> distr(0, 5); // default param: [0, INT_MAX]	
+	for (int i = 0; i<30; i++)  cout << distr(e) << " ";
+
+	cout << "\n real_distribution: " << endl;
+	// half open: [1, 5)  -- 1 is included, 5 is not.
+	std::uniform_real_distribution<double> distrReal(0, 5); // default param: [0, 1)
+	for (int i = 0; i<30; i++)  cout << distrReal(e) << " ";
+
+	cout << "\n poisson_distribution: " << endl;
+	std::poisson_distribution<int> distrP(1.0);  //  mean (double) 
+	for (int i = 0; i<30; i++) cout << distrP(e) << " ";
+
+	cout << "\n normal_distribution: " << endl;
+	// increasing the SD value increases the amount of spread
+	std::normal_distribution<double> distrN(10.0, 3.0);  // mean and standard deviation
+	vector<int> v(20);
+	for (int i = 0; i<800; i++) {
+		int num = distrN(e); // convert double to int
+		if (num >= 0 && num < 20)
+			v[num]++;   // E.g., v[12] records number of times 12 appeared
+	}
+	for (int i = 0; i<20; i++) {
+		// NOTE: string parameters - print as many star as v[i] holds
+		cout << i << ": " << std::string(v[i], '*') << endl;
+	}
+	// Stop using rand()%n; 
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: C++ 11 Library: Random Number Engine
@@ -102,7 +217,7 @@ int main()
 #include <algorithm> // std::shuffle
 using namespace std;
 
-#if 0
+
 /* Random Engine:
  *    stateful generator that generates random value within predefined min and max.
  *    Not truely random -- pseudorandom
@@ -127,7 +242,7 @@ int main ()
 	cout << eng() << endl;  // 3586334585; Generate second random value
 }
 
-#else
+
 
 /* More examples */
 void printRandom(std::default_random_engine e) {
