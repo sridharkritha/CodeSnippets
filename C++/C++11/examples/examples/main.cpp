@@ -12,9 +12,6 @@
 
 
 
-
-
-
 /*
 
 #include <iostream>
@@ -41,6 +38,387 @@ int main()
 
 
 #else
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/* STACK (native) - Interface is NOT thread safe */
+class stack {
+	int* _data; // integer array to store the _data
+	std::mutex _mu; // pop / top access the data through mutex _mu 
+public:
+	// separated functions top() and pop() makes the data NOT thread safe
+	int& top(); // returns the item on top
+	void pop(); // pops off the item on top of the stack but NOT return any value	
+};
+
+/* STACK (user defined) - Interface is thread safe */
+class stackSafe {
+	int* _data; // integer array to store the _data
+	std::mutex _mu; // pop access the data through mutex _mu 
+public:
+	// combine pop & top into one interface for making data access thread safe
+	int& pop(); // pops off the item on top of the stack but RETURNS data
+};
+
+void process(int d) {
+	cout<< 10 * d;
+}
+
+/*
+_data = [6,8,3,9]
+		Thread 1						Thread 2
+--------------------------------------------------------------
+1.	int v = st.top(); // 6
+2.									int v = st.top(); // 6
+3.	st.pop(); // 6
+4.									st.pop(); // 8
+5.									process(v); // 60
+6.	process(v); // 60
+
+NOT thread safe - 6 processed 'twice' and 8 popped but not processed 
+*/
+void function_1(stack& st) {
+	int v = st.top();
+	st.pop();
+	process(v);
+}
+
+/*
+_data = [6,8,3,9]
+		Thread 1						Thread 2
+--------------------------------------------------------------
+1.	int v = st.pop(); // 6
+2.									int v = st.pop(); // 8
+5.									process(v); // 80
+6.	process(v); // 60
+Thread safe - All element accessed once by either one of thead and processed only one time.
+*/
+
+void function_2(stackSafe& st) {
+	int v = st.pop();
+	process(v);
+}
+
+int main() {
+	std::thread t1(function_1); // t1 starts running
+	std::thread t2(function_1); // t2 starts running
+	t2.join(); t1.join();
+
+	std::thread t3(function_2); // t3 starts running
+	std::thread t4(function_2); // t4 starts running
+	t4.join(); t3.join();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Ref: C++ Threading #3: Data Race and Mutex
+// https://www.youtube.com/watch?v=3ZxZPeXPaM4&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=4&t=44s
+#include <iostream>
+#include <string>
+#include <fstream> // ofstream f;
+
+#include <thread>
+#include <mutex>
+using namespace std;
+
+std::mutex mu;
+
+// Method 1: Synchronization using mu.lock/unlock - NOT exception safe
+void shared_print(string msg, int id) {
+	mu.lock();
+	// Now access of 'cout' is synchronous
+	cout << msg << id << endl; // If it throws exception there then locked forever
+	mu.unlock();
+}
+
+// Method 2: Synchronization using lock_guard - exception safe by RAII
+void shared_print(string msg, int id) {
+	std::lock_guard<std::mutex> guard(mu); // RAII
+	// Now access of 'cout' is synchronous
+	cout << msg << id << endl; // Unloced even if there will be an exception
+}
+
+// Method 3: file synchronization (unlike 'cout' it gives complete synchonization)
+// (NOTE: we cann't achieve the complete synchonization in 'cout' bcos 'cout' is global object so it can 
+// used without lock mechanism by someone else)
+class LogFile {
+		std::mutex m_mutex;
+		ofstream f;
+	public:
+		LogFile()  { f.open("log.txt"); }
+		~LogFile() { f.close(); }
+
+		void shared_print_log(string msg, int id) {
+			std::lock_guard<std::mutex> guard(mu); // RAII
+			f << msg << id << endl; // Unloced even if there will be an exception
+		}
+
+		// To keep 'f' is a complete synchronous access.  Don't expose 'f' to the outside world bcos 'f' can be 
+		// used without going through the lock mechanism
+		// 1. Never return 'f' to the outside world. Example
+		// ofstream& getStream() { return f; }
+		// 2. Never pass 'f' as an argument to user provided function/ call back function. Example
+		// void process_f(void fun(ofstream&)) {
+		// 	fun(f);
+		// }
+};
+
+// Racing for 'cout' access!!
+void function_1() {
+	for(int i = 0; i > -100; --i) {
+		// cout<< "Fromt t1: " << i << endl;  // cout in asynchronous access
+		shared_print(string("From t1: "), i); // cout in synchronous access
+	}
+}
+
+// Racing for 'file' access !!
+void function_log(LogFile& log) {
+	 // file access is synchronous
+	for(int i = 0; i > -100; --i) log.shared_print_log(string("From t1: "), i);
+}
+
+int main() {
+	// cout shared access
+	std::thread t1(function_1); // t1 starts running
+
+	for(int i = 0; i < 100; ++i) {
+		// cout<< "Fromt main: " << i << endl;  // cout in asynchronous access
+		shared_print(string("From main: "), i); // cout in synchronous access
+	}
+	t1.join();
+
+	// file shared access
+	LogFile log;
+	std::thread t2(function_log, std::ref(log)); // passing 'log' by reference
+
+	for(int i = 0; i < 100; ++i) 
+	log.shared_print_log(string("From t1: "), i);
+	t2.join();
+
+	return 0;
+}
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Passing parameters to a thread
+// Paramters are always passed by value (copied).  why? same reason as bind(): deferred execution means the parmeter 
+// objects might not be valid at the time of execution
+// To pass by reference:
+// 1. use std::ref
+// 2. use pointer
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ Threading #2: Thread Management
+// https://www.youtube.com/watch?v=f2nMqNj7vxE&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=2
+#include <iostream>
+#include <string>
+#include <thread>
+using namespace std;
+
+// To pass a class method as thread's initial function, use pointers
+class A {
+public:
+	void call_from_thread(string* msg) {
+		*msg = "Beauty is only skin-deep"; // overwriting the source content
+		cout << "t1 says: " << *msg << endl; 
+	}
+};
+
+// Functor as a thread
+class Fctor {
+	public:
+	void operator()() {
+		std::cout << "Life is beautiful" << std::endl;
+	}
+
+	// Passing by value
+	void operator()(string msg) {
+		std::cout << "t1 says: " << msg << std::endl;
+		msg = "I'm altering the source msg";
+	}
+};
+
+class FctorParam {
+	public:
+	// Looks like a pass by reference but it actually a pass by value if it is used as a thread function
+	// parameter to thread always pass by value even if you capture using &
+	void operator()(string& msg) {
+		std::cout << "t1 says: " << msg << std::endl;
+		msg = "I'm altering the source msg";
+	}
+};
+
+// Function as a thread
+void function_1() {
+	std::cout << "Hello, World" << std::endl;
+}
+
+void passingParm(string& msg) {
+	msg = "Beauty is only skin-deep";
+	cout << "t1 says: " << msg << endl;
+}
+
+// Thread with moving parameters
+void functionParam(string msg) {
+	cout << "t1 says: " << msg << endl;
+}
+
+//Case 4: move semantics  (by return)
+thread f() {
+	// ...
+	return std::thread(functionParam);
+}
+
+//Case 5: move semantics (pass by value)
+void funMove(std::thread t) { }
+
+int main() {
+	cout<< std::thread::hardware_concurrency() << endl; // 4 = how many threads truly the processor can run = No. of core's
+	cout<< std::this_thread::get_id() << endl; // parent thread id
+
+	std::thread t1(function_1);
+	cout<< t1.get_id() << endl; // child thread id
+	
+	Fctor fct;
+	std::thread t2(fct);
+	t2.join(); // "Life is beautiful
+
+	// Below instead of creating a thread (variable definition), we are 'declaring' a function t2 (function declaration)
+	// that takes an arg and return a thread
+	// std::thread t3(Fctor()); // Compilation error - vexing syntax - variable definition / function declaration ??
+	std::thread t3((Fctor())); // NOTE: () - forcing the compiler to consider as 'variable definition'
+	t3.join(); // "Life is beautiful
+
+	string s = "Where there is no trust, there is no love";
+	// parameter to thread always pass by value even if the capturing function using & for the input parameter
+	std::thread t4((FctorParam()), s); // pass by value
+	t4.join();
+	cout << "from main: " << s << endl; // from main: Where there is no trust, there is no love
+
+	// Explicitly want to send the thread params - by reference (Method 1)
+	std::thread t5((FctorParam()), std::ref(s)); // both child and parent share the same 's' - It is dangerous
+	t5.join();
+	cout << "from main: " << s << endl; // from main: I'm altering the source msg [ALTERED BY CHILD THREAD]
+
+	// Explicitly want to send the thread params - by pointers (Method 2 - old way)
+	string str = "A friend in need is a friend indeed.";
+	A a;
+	std::thread tp(&A::call_from_thread, &a, &str); // &a - is must
+	tp.detach();
+	cout << "main says: " << str << endl; //  Beauty is only skin-deep
+
+	// move 's' from parent to child by reference (Like moving unique pointer, fstream, thread object etc)
+	std::thread t6((Fctor()), std::move(s)); // parent thead then no longer have an access to 's'	
+	t6.join();
+	// cout << "from main: " << s << endl; // It cann't access the moved 's'
+
+	string* ps = new string("A friend in need is a friend indeed.");
+	std::thread tps(passingParm, std::move(*ps)); // Beauty is only skin-deep
+	tps.join();
+	cout << "main: " << *ps << endl; // main: [empty string]
+
+	// A thread object cannot be copied. But it can be moved.  Like fstream, unique_ptr, etc.
+	// Case 1: move semantics
+	std::thread t7((Fctor()), std::move(s)); // parent thead then no longer have an access to 's'
+	// t7.join(); // if you are moving the thread object then join using by the moved one (t8.join())
+	// std::thread t8 = t7; // Error: thread cannot be copied only be moved.
+	std::thread t8 = std::move(t7); // changing ownership from t4 to t5.
+	t8.join();
+
+	// Case 2: move semantics
+	std::thread t9(functionParam);
+	// move semantics
+	std::thread t10 = move(t9);  // t10 become the owner of the thread
+	t10.join();
+
+	// Case 3: move semantics
+	funMove(std::thread(functionParam));
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ Threading #2: Thread Management
+// https://www.youtube.com/watch?v=f2nMqNj7vxE&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=2
+#include <iostream>
+#include <thread>
+using namespace std;
+
+// Function as a thread
+void function_1() {
+	std::cout << "Hello, World" << std::endl;
+}
+
+// Alternative way: RAII
+class ThreadJoiner {
+	std::thread& m_th;
+public:
+	explicit ThreadJoiner(std::thread& t):m_th(t) {}
+	~ThreadJoiner() {
+		if(m_th.joinable()) {
+			m_th.join();
+		}
+	}
+};
+
+int main() {
+	// t1.join() should be called before the function/t1 goes out of the scope
+	std::thread t1(function_1); // t1 starts running
+
+	// some operation
+	for (int i=0; i<100; i++) {
+		// Suppose exception is thrown inside this function 
+		// then t1.join() is never going to be executed
+		cout << "from main: " << i << endl;
+	}
+
+	// Solution: 1 - try/catch :
+	try {
+		for (int i=0; i<100; i++)
+			cout << "from main: " << i << endl;  // Exception may happen here
+	} catch (...) {
+		t1.join();
+		throw;
+	}
+	t1.join();
+
+	// Solution: 2 - RAII approach.
+	std::thread t2(function_1); // t2 starts running
+	ThreadJoiner tj(t2);
+
+	return 0;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ Threading #1: Introduction
+// https://www.youtube.com/watch?v=LL8wkskDlbs&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=2&t=411s
+#include <iostream>
+#include <thread>
+using namespace std;
+
+void function_1() {
+	std::cout << "Hello, World" << std::endl;
+}
+
+int main() {
+	std::thread t1(function_1); // t1 starts running
+	t1.join();					// main thread wait for t1 to finish
+	// t1.detach();	// main thread let t1 to run on its own: t1 is a daemon process.
+					// C++ runtime library is responsible returning t1's resources
+					// and main thread may finish before t2 prints "Hello, World"
+	// t1.join();	// crash bcos once it is detached then it is detached forever
+
+	if(t1.joinable())
+		t1.join();
+
+	return 0;
+}
+// If neither detach nor join is called, terminate() will be called for the t1.
+// A thread can only be joined once or detached once. After it is joined on detached
+// it becomes unjoinable ( t.joinable() returns false )
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: C++ 11 Library: When to Use Tuple ?
 // https://www.youtube.com/watch?v=VFmyZg7zJ3s&list=PL5jc9xFGsL8FWtnZBeTqZBbniyw0uHyaH&index=20
 
