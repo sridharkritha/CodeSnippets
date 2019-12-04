@@ -1,5 +1,123 @@
 #if 1
 
+// Ref: C++ Threading #5: Unique Lock and Lazy Initialization
+// https://www.youtube.com/watch?v=IBu5ka1MQ7w&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=5
+#include <iostream>
+#include <string>
+#include <deque>
+#include <fstream> // ofstream f;
+
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+using namespace std;
+
+
+std::deque<int> q;
+std::mutex mu;
+
+
+std::condition_variable cond; // synchronize the excution sequence of the threads
+
+void producer() { // Producer Thread
+	int count = 10;
+	while (count > 0) {
+		std::unique_lock<mutex> locker(mu);
+		q.push_front(count);
+		locker.unlock();
+		cond.notify_one();    // NOTIFY/WAKE-UP one waiting thread, if there is one.
+		// cond.notify_all(); // If you want to NOTIFY/WAKE-UP all the waiting threads
+		std::this_thread::sleep_for(chrono::seconds(1));
+		count--;
+	}
+}
+
+void consumer() { // Consumer Thread
+	int data = 0;
+	while (data != 1) // BUSY WAITING state - NOT GOOD!
+	{
+		std::unique_lock<mutex> locker(mu);
+
+		// SLEEP until it gets notification / wake up call.
+		// Before goes to sleep, mutex is unlocked internally and then locked again once it 
+		// gets the notification (intenal lock/unlock). We cann't use 'lock_guard' for this case.
+		
+		// cond.wait(locker); // possibilities for SPURIOUS WAKE UP on it OWN so need some extra conditon by lamda function.
+		cond.waint(locker, []() { return !q.empty(); });
+
+		// if (!q.empty()) {
+			data = q.back();
+			q.pop_back();
+			locker.unlock();
+			cout << "t2 got a value from t1: " << data << endl;
+		/*
+		}
+		else {
+			locker.unlock();
+		}
+		// sleep for some seconds will reduce the BUSY WAIT.
+		// But it is hard to find how many sec to sleep(may become over-sleep / short-sleep)
+		std::this_thread::sleep_for(chrono::milliseconds(9));
+		*/
+	}
+}
+
+/*
+void producer() { // Producer Thread
+	int count = 10;
+	while (count > 0) {
+		std::unique_lock<mutex> locker(mu);
+		q.push_front(count); 
+		locker.unlock();
+		std::this_thread::sleep_for(chrono::seconds(1));
+		count--;
+	}
+}
+
+void consumer() { // Consumer Thread
+	int data = 0;
+	while (data != 1) // BUSY WAITING state - NOT GOOD!
+	{
+		std::unique_lock<mutex> locker(mu);
+		if (!q.empty()) {
+			data = q.back();
+			q.pop_back();
+			locker.unlock();
+			cout << "t2 got a value from t1: " << data << endl;
+		}
+		else {
+			locker.unlock();
+		}
+		// sleep for some seconds will reduce the BUSY WAIT.
+		// But it is hard to find how many sec to sleep(may become over-sleep / short-sleep)
+		std::this_thread::sleep_for(chrono::milliseconds(9));
+	}
+}
+*/
+
+
+
+
+// It is hard to set the sleep time.
+int main() {
+	std::thread t1(producer);
+	std::thread t2(consumer);
+	t1.join();
+	t2.join();
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -38,6 +156,250 @@ int main()
 
 
 #else
+ofstream f;
+std::mutex mu_file;
+std::mutex _mu1;
+
+void openFileOnce() {
+		// Initialization Upon First Use Idiom / Lazy Initialization
+		if(f.is_open())
+		{
+			f.open("log.txt"); // NOT thread safe so FILE will be opened twice
+		}
+}
+
+void openFileOnce() {
+		if(f.is_open()) // This line is NOT thread safe so still FILE will be opened twice
+		{
+			std::unique_lock<mutex> locker(mu_file);
+			f.open("log.txt");
+		}
+}
+
+void openFileOnce() {
+		std::unique_lock<mutex> locker(mu_file);
+		if(f.is_open()) // File opened once. But everytime it locks before doing the file open check(time consuming)
+		{
+			f.open("log.txt");
+		}
+}
+
+std::once_flag oFlag; // instead of mutux use the standard library support of std::once_flag & std::call_once flag
+void openFileOnce() {
+		// File will be opened ONLY ONCE by ONE THREAD
+		std::call_once(oFlag, [&]() { f.open("log.txt"); });
+}
+
+
+void shared_print(string msg, int id) {
+	openFileOnce(); // OPEN file once - common file for all threads	
+	
+	std::unique_lock<std::mutex> locker1(_mu1); 
+	f << msg << id << endl;
+	locker1.unlock();
+	// do something
+}
+
+// Racing for 'cout' access!!
+void function_1() {
+	for(int i = 0; i > -100; --i) {
+		// cout<< "Fromt t1: " << i << endl;  // cout in asynchronous access
+		shared_print(string("From t1: "), i); // cout in synchronous access
+	}
+}
+
+int main() {
+	// cout shared access
+	std::thread t1(function_1); // t1 starts running
+
+	for(int i = 0; i < 100; ++i) {
+		// cout<< "Fromt main: " << i << endl;  // cout in asynchronous access
+		shared_print(string("From main: "), i); // cout in synchronous access
+	}
+	t1.join();
+
+	return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ Threading #5: Unique Lock and Lazy Initialization
+// https://www.youtube.com/watch?v=IBu5ka1MQ7w&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=5
+#include <iostream>
+#include <string>
+#include <fstream> // ofstream f;
+
+#include <thread>
+#include <mutex>
+using namespace std;
+
+// unique_lock - has more flexible methods but heavier than 'lock_guard'
+
+class LogFile {
+		std::mutex _mu1;
+		std::mutex _mu2;
+		ofstream f;
+	public:
+		LogFile()  { f.open("log.txt"); }
+		~LogFile() { f.close(); }
+
+		void shared_print_log_1(string msg, int id) {
+			
+			// lock_guard:
+			// std::lock_guard<std::mutex> locker1(_mu1); // RAII
+			// f << msg << id << endl; 
+
+			// unique_lock:
+			// Method 1: RAII way of usage
+			std::unique_lock<std::mutex> locker1(_mu1); 
+			f << msg << id << endl;
+
+			// Method 2: Fine grained lock and unlock
+			std::unique_lock<std::mutex> locker1(_mu1); 
+			f << msg << id << endl;
+			locker1.unlock();
+
+			// Method 3: Lock / Unlock arbitrarily number of times
+			// locker1 is the owner of mutex _mu1. But mutex haven't locked anything yet.
+			std::unique_lock<std::mutex> locker1(_mu1, std::defer_lock);
+			// do something else
+			locker1.lock(); // Now mutex locked the resource
+			f << msg << id << endl;
+			locker1.unlock();
+			// do something else
+			locker1.lock(); // Now mutex locked the resource
+			cout << msg << id << endl;
+			locker1.unlock();
+
+			// Method 4: Both lock_guard & unique_lock can't be copied. But unique_lock can be moved and lock_guard cann't.
+			// move the ownership of mutex(_mu1) from locker1 to locker2
+			std::unique_lock<std::mutex> locker2 = std::move(locker1);
+		}
+
+		void shared_print_log_2(string msg, int id) {
+			// Method 1:
+			// Lock the mutuxes in the same other like others, otherewise classical DEADLOCK will happen.
+			// Problem: DEADLOCK - by Unordered way of Locking the mutuxes 
+			// std::lock_guard<std::mutex> locker2(_mu2); 
+			// std::lock_guard<std::mutex> locker1(_mu1); 
+
+			// Solution: NO DEADLOCK - locked the mutuxes in the same order like others
+			// std::lock_guard<std::mutex> locker1(_mu1); 
+			// std::lock_guard<std::mutex> locker2(_mu2);
+
+			// Method 2:
+			std::lock(_mu1, _mu2);
+			std::lock_guard<std::mutex> locker1(_mu1, std::adopt_lock);
+			std::lock_guard<std::mutex> locker2(_mu2, std::adopt_lock);
+
+			// f << msg << id << endl; 
+			cout << msg << id << endl; 
+		}
+};
+
+// Racing for 'file' access !!
+void function_log(LogFile& log) {
+	 // file access is synchronous
+	for(int i = 0; i > -100; --i) log.shared_print_log_1(string("From t1: "), i); // shared_print_log_1
+}
+
+int main() {
+	// file shared access
+	LogFile log;
+	std::thread t1(function_log, std::ref(log)); // passing 'log' by reference
+
+	for(int i = 0; i < 100; ++i) 
+	log.shared_print_log_2(string("From main: "), i); // shared_print_log_2
+	t1.join();
+
+	return 0;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Ref: C++ Threading #4: Deadlock
+// https://www.youtube.com/watch?v=_N0B5ua7oN8&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=5&t=9s
+#include <iostream>
+#include <string>
+#include <fstream> // ofstream f;
+
+#include <thread>
+#include <mutex>
+using namespace std;
+
+class LogFile {
+	std::mutex _mu1;
+	std::mutex _mu2;
+	ofstream f;
+public:
+	LogFile() { f.open("log.txt"); }
+	~LogFile() { f.close(); }
+
+	void shared_print_log_1(string msg, int id) {
+		// Conside a case we need more than one mutex to protect the shared case.
+		// Method 1:
+		// std::lock_guard<std::mutex> locker1(_mu1);
+		// std::lock_guard<std::mutex> locker2(_mu2);
+
+		// Method 2:
+		// C++ library provides additional algorithms for deadlock avoidance in case of more than one mutex usage situations. 
+		std::lock(_mu1, _mu2);
+		std::lock_guard<std::mutex> locker1(_mu1, std::adopt_lock);
+		std::lock_guard<std::mutex> locker2(_mu2, std::adopt_lock);
+
+		// f << msg << id << endl; 
+		cout << msg << id << endl;
+	}
+
+	void shared_print_log_2(string msg, int id) {
+		// Method 1:
+		// Lock the mutuxes in the same other like others, otherewise classical DEADLOCK will happen.
+		// Problem: DEADLOCK - by Unordered way of Locking the mutuxes 
+		// std::lock_guard<std::mutex> locker2(_mu2); 
+		// std::lock_guard<std::mutex> locker1(_mu1); 
+
+		// Solution: NO DEADLOCK - locked the mutuxes in the same order like others
+		// std::lock_guard<std::mutex> locker1(_mu1); 
+		// std::lock_guard<std::mutex> locker2(_mu2);
+
+		// Method 2:
+		std::lock(_mu1, _mu2);
+		std::lock_guard<std::mutex> locker1(_mu1, std::adopt_lock);
+		std::lock_guard<std::mutex> locker2(_mu2, std::adopt_lock);
+
+		// f << msg << id << endl; 
+		cout << msg << id << endl;
+	}
+};
+
+// Racing for 'file' access !!
+void function_log(LogFile& log) {
+	// file access is synchronous
+	for (int i = 0; i > -100; --i) log.shared_print_log_1(string("From t1: "), i); // shared_print_log_1
+}
+
+int main() {
+	// file shared access
+	LogFile log;
+	std::thread t1(function_log, std::ref(log)); // passing 'log' by reference
+
+	for (int i = 0; i < 100; ++i)
+		log.shared_print_log_2(string("From main: "), i); // shared_print_log_2
+	t1.join();
+
+	return 0;
+}
+
+/* Avoiding deadlock
+1. Prefer locking single mutex if possible.
+2. Avoid locking a mutex and then calling a user provided function. User may lock an another mutex inside their function.
+3. Use std::lock() to lock more than one mutex.
+4. Lock the mutex in same order. Prefer hierarchical locking - lower level mutex will not lock the higher level mutex.
+
+
+Locking Granularity:
+- Fine-grained lock:  protects small amount of data but more possibilities of getting deadlock by using more no. of mutexes.
+- Coarse-grained lock: protects big amount of data but loses the parallelism.
+*/
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* STACK (native) - Interface is NOT thread safe */
 class stack {
