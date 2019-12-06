@@ -1,7 +1,306 @@
 #if 1
+// Ref: C++ Threading #7: Future, Promise and async()
+https://www.youtube.com/watch?v=SZQ6-pf-5Us&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=7
 
-// Ref: C++ Threading #5: Unique Lock and Lazy Initialization
-// https://www.youtube.com/watch?v=IBu5ka1MQ7w&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=5
+
+/* For threads to return values: future */
+void square(int N, int& r) {
+	int res = N * N;
+	r = res;
+}
+
+int squareFuture(int N) {
+	int res = N * N;
+	return res;
+}
+
+int main() {
+	int num = 4;
+	int result;
+
+	// Method: 1
+	std::thread t1(square, num, std::ref(result);); // result variable is shared b/w parent and child threads
+	t1.join();
+	cout<< result;
+
+	// Method 2:
+	// Use std::async 'function' to create a thread.
+	// async is a 'function' not a class which create and launch a thread and then it returns 'future' object from the launched thread.
+	std::future<int> fu = std::async(squareFuture, num); // NOTE: std::thread and std::future are class not a function.	
+	// std::future<int> fu = std::async(std::launch::deferred | std::launch::async, squareFuture, num);   // SAME as above.
+														// std::launch::deferred | std::launch::async - is a DEFAULT value.
+
+	// wait until the child finish it's execution and get the returned value from the child thread
+	result = fu.get(); // NOTE: It should be called only once.
+	// fu.get(); // CRASH
+	cout<< result;
+
+	// Method 3: std::launch::deferred - will NOT create a thread and call the thread function using current thread when there is an explicit request by fu.get().
+	std::future<int> fu = std::async(std::launch::deferred, squareFuture, num); // Thread will NOT be created.
+	result = fu.get(); // 'squareFuture' will be called by the current thread (not by a new thread)
+	cout<< result;
+
+	// Method 4:std::launch::async - Thread will be created.	
+	std::future<int> fu = std::async(std::launch::async, squareFuture, num); // Thread will be created.
+	result = fu.get();
+	cout<< result;
+
+	return 0;
+}
+
+
+
+
+#if 0
+
+
+
+/* For threads to return values: future */
+int factorial(int N) {
+	int res = 1;
+	for (int i=N; i>1; i--)
+		res *= i;
+
+	return res;
+}
+
+int main() {
+	//future<int> fu = std::async(factorial, 4); 
+	future<int> fu = std::async(std::launch::deferred | std::launch::async, factorial, 4);
+	cout << "Got from child thread #: " << fu.get() << endl;
+	// fu.get();  // crash
+	return 0;
+}
+
+
+
+/* Asynchronously provide data with promise */
+int factorial(future<int>& f) {
+	// do something else
+
+	int N = f.get();     // If promise is distroyed, exception: std::future_errc::broken_promise
+	cout << "Got from parent: " << N << endl; 
+	int res = 1;
+	for (int i=N; i>1; i--)
+		res *= i;
+
+	return res;
+}
+
+int main() {
+	promise<int> p;
+	future<int> f = p.get_future();
+
+	future<int> fu = std::async(std::launch::async, factorial, std::ref(f));
+
+	// Do something else
+	std::this_thread::sleep_for(chrono::milliseconds(20));
+	//p.set_value(5);   
+	//p.set_value(28);  // It can only be set once
+	p.set_exception(std::make_exception_ptr(std::runtime_error("Flat tire")));
+
+	cout << "Got from child thread #: " << fu.get() << endl;
+	return 0;
+}
+
+
+
+
+/* shared_future */
+int factorial(shared_future<int> f) {
+	// do something else
+
+	int N = f.get();     // If promise is distroyed, exception: std::future_errc::broken_promise
+	f.get();
+	cout << "Got from parent: " << N << endl; 
+	int res = 1;
+	for (int i=N; i>1; i--)
+		res *= i;
+
+	return res;
+}
+
+int main() {
+	// Both promise and future cannot be copied, they can only be moved.
+	promise<int> p;
+	future<int> f = p.get_future();
+	shared_future<int> sf = f.share();
+
+	future<int> fu = std::async(std::launch::async, factorial, sf);
+	future<int> fu2 = std::async(std::launch::async, factorial, sf);
+
+	// Do something else
+	std::this_thread::sleep_for(chrono::milliseconds(20));
+	p.set_value(5);
+
+	cout << "Got from child thread #: " << fu.get() << endl;
+	cout << "Got from child thread #: " << fu2.get() << endl;
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+/* async() are used in the same ways as thread(), bind() */
+class A {
+public:
+	string note;
+	void f(int x, char c) { }
+	long g(double x) { note = "changed"; return 0;}
+	int operator()(int N) { return 0;}
+};
+A a;
+
+int main() {
+	a.note = "Original"; 
+	std::future<int> fu3 = std::async(A(), 4);    // A tmpA;  tmpA is moved to async(); create a task/thread with tmpA(4);
+	std::future<int> fu4 = std::async(a, 7);    
+	std::future<int> fu4 = std::async(std::ref(a), 7); // a(7);  Must use reference wrapper
+	std::future<int> fu5 = std::async(&a, 7); // Won't compile
+
+	std::future<void> fu1 = std::async(&A::f, a, 56, 'z'); // A copy of a invokes f(56, 'z')
+	std::future<long> fu2 = std::async(&A::g, &a, 5.6);    // a.g(5.6);  a is passed by reference
+		// note: the parameter of the invocable are always passed by value, but the invokeable itself can be passed by ref.
+	cout << a.note << endl;
+	return 0;
+}
+/*
+	std::thread t1(a, 6);   
+	std::async(a, 6);   
+    std::bind(a, 6);
+    std::call_once(once_flag, a, 6);
+
+	std::thread t2(a, 6); 
+	std::thread t3(std::ref(a), 6); 
+	std::thread t4(std::move(a), 6);
+	std::thread t4([](int x){return x*x;}, 6);
+
+	std::thread t5(&A::f, a, 56, 'z');  // copy_of_a.f(56, 'z')
+	std::thread t6(&A::f, &a, 56, 'z');  // a.f(56, 'z') 
+*/
+
+
+
+/* packaged_task */
+
+std::mutex mu;
+std::deque<std::packaged_task<int()> > task_q;
+
+int factorial(int N) {
+	int res = 1;
+	for (int i=N; i>1; i--)
+		res *= i;
+
+	return res;
+}
+
+void thread_1() {
+	for (int i=0; i<10000; i++) {
+		std::packaged_task<int()> t;
+		{
+			std::lock_guard<std::mutex> locker(mu);
+			if (task_q.empty()) 
+				continue;
+			t = std::move(task_q.front());
+			task_q.pop_front();
+		}
+		t();
+	}
+}
+
+int main() {
+	std::thread th(thread_1);
+
+	std::packaged_task<int()> t(bind(factorial, 6));  
+	std::future<int> ret = t.get_future();
+	std::packaged_task<int()> t2(bind(factorial, 9));
+	std::future<int> ret2 = t2.get_future();
+	{
+		std::lock_guard<std::mutex> locker(mu);
+		task_q.push_back(std::move(t));
+		task_q.push_back(std::move(t2));
+	}
+	cout << "I see: " << ret.get() << endl;
+	cout << "I see: " << ret2.get() << endl;
+
+	th.join();
+	return 0;
+}
+
+
+
+/* Summary
+ * 3 ways to get a future:
+ * - promise::get_future()
+ * - packaged_task::get_future()
+ * - async() returns a future
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+#include <iostream>
+
+int main()
+{
+	/////////////////////////////////
+	// 
+	/////////////////////////////////
+	// C++ 03 -  
+	
+
+	// C++ 11 - 	
+
+	return 0;
+}
+
+*/
+
+
+
+
+
+
+
+#else
+
+
+// Ref: C++ Threading #6: Condition Variable
+// https://www.youtube.com/watch?v=13dFggo4t_I&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=7&t=0s
 #include <iostream>
 #include <string>
 #include <deque>
@@ -12,10 +311,8 @@
 #include <condition_variable>
 using namespace std;
 
-
 std::deque<int> q;
 std::mutex mu;
-
 
 std::condition_variable cond; // synchronize the excution sequence of the threads
 
@@ -61,6 +358,9 @@ void consumer() { // Consumer Thread
 		*/
 	}
 }
+
+///////////////////////////////////////////////////////////////////
+// Producer & Consumer - Option 1 - WRONG
 
 /*
 void producer() { // Producer Thread
@@ -109,57 +409,22 @@ int main() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ Threading #5: Lazy Initialization
+// https://www.youtube.com/watch?v=IBu5ka1MQ7w&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=5
 #include <iostream>
+#include <string>
+#include <fstream> // ofstream f;
 
-int main()
-{
-	/////////////////////////////////
-	// 
-	/////////////////////////////////
-	// C++ 03 -  
-	
+#include <thread>
+#include <mutex>
+using namespace std;
 
-	// C++ 11 - 	
-
-	return 0;
-}
-
-*/
-
-
-
-
-
-
-
-#else
 ofstream f;
 std::mutex mu_file;
 std::mutex _mu1;
 
+// Option 1 - Wrong
 void openFileOnce() {
 		// Initialization Upon First Use Idiom / Lazy Initialization
 		if(f.is_open())
@@ -168,6 +433,7 @@ void openFileOnce() {
 		}
 }
 
+// Option 1 - Wrong
 void openFileOnce() {
 		if(f.is_open()) // This line is NOT thread safe so still FILE will be opened twice
 		{
@@ -176,6 +442,7 @@ void openFileOnce() {
 		}
 }
 
+// Option 1 - Wrong
 void openFileOnce() {
 		std::unique_lock<mutex> locker(mu_file);
 		if(f.is_open()) // File opened once. But everytime it locks before doing the file open check(time consuming)
@@ -184,6 +451,7 @@ void openFileOnce() {
 		}
 }
 
+// Option 1 - Wrong
 std::once_flag oFlag; // instead of mutux use the standard library support of std::once_flag & std::call_once flag
 void openFileOnce() {
 		// File will be opened ONLY ONCE by ONE THREAD
@@ -313,6 +581,7 @@ int main() {
 
 	return 0;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Ref: C++ Threading #4: Deadlock
@@ -388,17 +657,17 @@ int main() {
 	return 0;
 }
 
-/* Avoiding deadlock
-1. Prefer locking single mutex if possible.
-2. Avoid locking a mutex and then calling a user provided function. User may lock an another mutex inside their function.
-3. Use std::lock() to lock more than one mutex.
-4. Lock the mutex in same order. Prefer hierarchical locking - lower level mutex will not lock the higher level mutex.
+	// Avoiding deadlock
+	// 	1. Prefer locking single mutex if possible.
+	// 	2. Avoid locking a mutex and then calling a user provided function. User may lock an another mutex inside their function.
+	// 	3. Use std::lock() to lock more than one mutex.
+	// 	4. Lock the mutex in same order. Prefer hierarchical locking - lower level mutex will not lock the higher level mutex.
 
 
-Locking Granularity:
-- Fine-grained lock:  protects small amount of data but more possibilities of getting deadlock by using more no. of mutexes.
-- Coarse-grained lock: protects big amount of data but loses the parallelism.
-*/
+	// Locking Granularity:
+	// 	- Fine-grained lock:  protects small amount of data but more possibilities of getting deadlock by using more no. of mutexes.
+	// 	- Coarse-grained lock: protects big amount of data but loses the parallelism.
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* STACK (native) - Interface is NOT thread safe */
