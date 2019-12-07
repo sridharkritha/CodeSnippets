@@ -1,191 +1,11 @@
-#if 1
-// Ref: C++ Threading #7: Future, Promise and async()
-https://www.youtube.com/watch?v=SZQ6-pf-5Us&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=7
+#if 0
 
 
-/* For threads to return values: future */
-void square(int N, int& r) {
-	int res = N * N;
-	r = res;
-}
-
-int squareFuture(int N) {
-	int res = N * N;
-	return res;
-}
-
-int main() {
-	int num = 4;
-	int result;
-
-	// Method: 1
-	std::thread t1(square, num, std::ref(result);); // result variable is shared b/w parent and child threads
-	t1.join();
-	cout<< result;
-
-	// Method 2:
-	// Use std::async 'function' to create a thread.
-	// async is a 'function' not a class which create and launch a thread and then it returns 'future' object from the launched thread.
-	std::future<int> fu = std::async(squareFuture, num); // NOTE: std::thread and std::future are class not a function.	
-	// std::future<int> fu = std::async(std::launch::deferred | std::launch::async, squareFuture, num);   // SAME as above.
-														// std::launch::deferred | std::launch::async - is a DEFAULT value.
-
-	// wait until the child finish it's execution and get the returned value from the child thread
-	result = fu.get(); // NOTE: It should be called only once.
-	// fu.get(); // CRASH
-	cout<< result;
-
-	// Method 3: std::launch::deferred - will NOT create a thread and call the thread function using current thread when there is an explicit request by fu.get().
-	std::future<int> fu = std::async(std::launch::deferred, squareFuture, num); // Thread will NOT be created.
-	result = fu.get(); // 'squareFuture' will be called by the current thread (not by a new thread)
-	cout<< result;
-
-	// Method 4:std::launch::async - Thread will be created.	
-	std::future<int> fu = std::async(std::launch::async, squareFuture, num); // Thread will be created.
-	result = fu.get();
-	cout<< result;
-
-	return 0;
-}
 
 
 
 
 #if 0
-
-
-
-/* For threads to return values: future */
-int factorial(int N) {
-	int res = 1;
-	for (int i=N; i>1; i--)
-		res *= i;
-
-	return res;
-}
-
-int main() {
-	//future<int> fu = std::async(factorial, 4); 
-	future<int> fu = std::async(std::launch::deferred | std::launch::async, factorial, 4);
-	cout << "Got from child thread #: " << fu.get() << endl;
-	// fu.get();  // crash
-	return 0;
-}
-
-
-
-/* Asynchronously provide data with promise */
-int factorial(future<int>& f) {
-	// do something else
-
-	int N = f.get();     // If promise is distroyed, exception: std::future_errc::broken_promise
-	cout << "Got from parent: " << N << endl; 
-	int res = 1;
-	for (int i=N; i>1; i--)
-		res *= i;
-
-	return res;
-}
-
-int main() {
-	promise<int> p;
-	future<int> f = p.get_future();
-
-	future<int> fu = std::async(std::launch::async, factorial, std::ref(f));
-
-	// Do something else
-	std::this_thread::sleep_for(chrono::milliseconds(20));
-	//p.set_value(5);   
-	//p.set_value(28);  // It can only be set once
-	p.set_exception(std::make_exception_ptr(std::runtime_error("Flat tire")));
-
-	cout << "Got from child thread #: " << fu.get() << endl;
-	return 0;
-}
-
-
-
-
-/* shared_future */
-int factorial(shared_future<int> f) {
-	// do something else
-
-	int N = f.get();     // If promise is distroyed, exception: std::future_errc::broken_promise
-	f.get();
-	cout << "Got from parent: " << N << endl; 
-	int res = 1;
-	for (int i=N; i>1; i--)
-		res *= i;
-
-	return res;
-}
-
-int main() {
-	// Both promise and future cannot be copied, they can only be moved.
-	promise<int> p;
-	future<int> f = p.get_future();
-	shared_future<int> sf = f.share();
-
-	future<int> fu = std::async(std::launch::async, factorial, sf);
-	future<int> fu2 = std::async(std::launch::async, factorial, sf);
-
-	// Do something else
-	std::this_thread::sleep_for(chrono::milliseconds(20));
-	p.set_value(5);
-
-	cout << "Got from child thread #: " << fu.get() << endl;
-	cout << "Got from child thread #: " << fu2.get() << endl;
-	return 0;
-}
-
-
-
-
-
-
-
-
-
-
-/* async() are used in the same ways as thread(), bind() */
-class A {
-public:
-	string note;
-	void f(int x, char c) { }
-	long g(double x) { note = "changed"; return 0;}
-	int operator()(int N) { return 0;}
-};
-A a;
-
-int main() {
-	a.note = "Original"; 
-	std::future<int> fu3 = std::async(A(), 4);    // A tmpA;  tmpA is moved to async(); create a task/thread with tmpA(4);
-	std::future<int> fu4 = std::async(a, 7);    
-	std::future<int> fu4 = std::async(std::ref(a), 7); // a(7);  Must use reference wrapper
-	std::future<int> fu5 = std::async(&a, 7); // Won't compile
-
-	std::future<void> fu1 = std::async(&A::f, a, 56, 'z'); // A copy of a invokes f(56, 'z')
-	std::future<long> fu2 = std::async(&A::g, &a, 5.6);    // a.g(5.6);  a is passed by reference
-		// note: the parameter of the invocable are always passed by value, but the invokeable itself can be passed by ref.
-	cout << a.note << endl;
-	return 0;
-}
-/*
-	std::thread t1(a, 6);   
-	std::async(a, 6);   
-    std::bind(a, 6);
-    std::call_once(once_flag, a, 6);
-
-	std::thread t2(a, 6); 
-	std::thread t3(std::ref(a), 6); 
-	std::thread t4(std::move(a), 6);
-	std::thread t4([](int x){return x*x;}, 6);
-
-	std::thread t5(&A::f, a, 56, 'z');  // copy_of_a.f(56, 'z')
-	std::thread t6(&A::f, &a, 56, 'z');  // a.f(56, 'z') 
-*/
-
-
 
 /* packaged_task */
 
@@ -298,7 +118,165 @@ int main()
 
 #else
 
+// Ref: C++ Threading #8: Using Callable Objects
+// https://www.youtube.com/watch?v=nU18p75u1oQ&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=8
+#include <iostream>
+#include <future>		// thread, async, call_once
+#include <functional>	// bind
+using namespace std;
 
+// Callable Object and Callable Function
+class A {
+public:
+	void f(int x, char c) { }
+	int operator()(int N) { return 0;} // functor
+};
+
+void foo(int x) { }
+
+int main() {
+	A a; // a - is a CALLABLE object
+
+	// Different ways of using the callable object followed by variable number of arguments
+	std::thread t(a, 6);
+	std::async(a, 6);
+	std::bind(a, 6);
+	std::once_flag oFlag;
+	std::call_once(oFlag, a, 6);
+
+	// Functor
+	std::thread t1(a, 6); // create a copy of object 'a' and invoke as a functor[a()] in a different thread
+	std::thread t2(std::ref(a), 6);  // Reuse the existing object 'a' and call the functor[a()] in a different thread
+	std::thread t3(std::move(a), 6); // NO copy of a but a is no longer usable in main thread
+	std::thread t4(A(), 6);			 // create a temp A then temp A move into thread object
+	
+	// Member Function
+	std::thread t5(&A::f, a, 6, 'w');  // copy_of_a.f(6, 'w') in a different thread
+	std::thread t6(&A::f, &a, 6, 'w'); // NO copy of a => a.f(6, 'w') in a different thread
+
+	// Can be also a callable FUNCTION instead of object
+	std::thread t7(foo, 6); // callable function
+	std::thread t8([](float x) { return x + 20.0f; }, 5.2); // callable lamda function
+
+	// Similliarly you can do the SAME for 'async', 'bind' and 'call_once'
+	return 0;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ Threading #7: Future, Promise and async()
+// https://www.youtube.com/watch?v=SZQ6-pf-5Us&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=7
+#include <iostream>
+#include <future> // thread, async, call_once
+using namespace std;
+
+// Thread function INDIRECTLY put the result in the shared memory location
+void squareReference(int N, int& r) {
+	int res = N * N;
+	r = res;
+}
+
+// Thread function returns value
+int squareFuture(int N) {
+	int res = N * N;
+	return res;
+}
+
+// Thread function get the input param from parent thread through FUTURE and returns the calculated value.
+// Again parent thread capture the result returned by a child thread through FUTURE.
+int squareFuturePromise(std::future<int>& f) {
+	int N = f.get(); // wait until you get a value from the parent thread 
+	// if parent broke the promise by not sending any value then throw EXCEPTION: std::future_errc::broken_promise
+
+	int res = N * N;
+	return res;
+}
+
+// Thread function get the input param through SHARED FUTURE and returns the calculated value
+int squareSharedFuturePromise(std::shared_future<int> f) {
+	int N = f.get();
+
+	int res = N * N;
+	return res;
+}
+
+
+int main() {
+	int num = 4;
+	int result;
+
+	// Method: 1
+	std::thread t1(squareReference, num, std::ref(result)); // result variable is shared b/w parent and child threads
+	t1.join();
+	cout<< "Calculated result and stored in shared location by a Child thread: " << result << endl;
+
+	// Method 2:
+	// Use std::async 'function' to create a thread.
+	// async is a 'function' not a class which create and launch a thread and then it returns 'future' object from the launched thread.
+	std::future<int> fu = std::async(squareFuture, num); // NOTE: std::thread and std::future are class not a function.	
+	// std::future<int> fu = std::async(std::launch::deferred | std::launch::async, squareFuture, num);   // SAME as above.
+														// std::launch::deferred | std::launch::async - is a DEFAULT value.
+
+	// wait until the child finish it's execution and get the returned value from the child thread
+	result = fu.get(); // NOTE: It should be called only once.
+	// fu.get(); // CRASH
+	cout<< "Get from Child: " << result << endl;
+
+	// Method 3: std::launch::deferred - will NOT create a thread and call the thread function using the current thread 
+	// when there is an explicit request by fu.get().
+	std::future<int> fu = std::async(std::launch::deferred, squareFuture, num); // Thread will NOT be created.
+	result = fu.get(); // 'squareFuture' will be called by the current thread (not by a new thread)
+	cout<< "Get from Child: " << result << endl;
+
+	// Method 4:std::launch::async - Thread will be created.
+	std::future<int> fu = std::async(std::launch::async, squareFuture, num); // Thread will be created.
+	result = fu.get();
+	cout<< "Get from Child: " << result << endl;
+
+	// Method 5: 	a). PASS input parameter to child thread sometimes after the child thread creation by PROMISE and FUTURE
+	// 				b). GET the result from the child thread using FUTURE
+	std::promise<int> p; // NOTE: both future & promise are only MOVED 'not' COPIED.
+	std::future<int> f = p.get_future();
+	// do a promise to the child thread that the parent thread will send the input param sometime later.
+	std::future<int> fu = std::async(std::launch::async, squareFuturePromise, std::ref(f)); // f is MOVED not copied
+	
+	// do something else for some time
+	std::this_thread::sleep_for(chrono::milliseconds(20));
+
+	p.set_value(4); // NOW pass a value to already created thread
+	// Incase you cann't have a value to send to already created and already promised thread. Notify your situation and catch the EXCEPTION.
+	// p.set_exception(std::make_exception_ptr(std::runtime_error("Sorry, I cann't send any input - I'm breaking my promise")));
+
+	// do something else for some time
+	std::this_thread::sleep_for(chrono::milliseconds(20));
+
+	result = fu.get();
+	cout<< "Get from Child: " << result << endl;
+
+	// Method 6: pass the SAME input parameter to MUTIPLE THREADS using A SHARED FUTURE instead of creating multiple FUTURE.
+	// FUTRURE - Can NOT be copied but MOVED. SHARED FUTURE - CAN be copied (shared).
+	std::promise<int> p; // NOTE: both future & promise are only MOVED 'not' COPIED.
+	std::shared_future<int> sf = p.get_future(); // shared among different threads
+	 
+	std::future<int> fu1 = std::async(std::launch::async, squareSharedFuturePromise, sf); // f is COPIED not moved
+	std::future<int> fu2 = std::async(std::launch::async, squareSharedFuturePromise, sf); 
+	std::future<int> fu3 = std::async(std::launch::async, squareSharedFuturePromise, sf); 
+	
+	// do something else for some time
+	std::this_thread::sleep_for(chrono::milliseconds(20));
+
+	p.set_value(4); // NOW BROADCAST a value to ALL already created thread
+	// p.set_exception(std::make_exception_ptr(std::runtime_error("Sorry, I cann't send any input - I'm breaking my promise")));
+
+	// do something else for some time
+	std::this_thread::sleep_for(chrono::milliseconds(20));
+
+	result = fu2.get();
+	cout<< "Get from Child: " << result << endl;
+
+	return 0;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: C++ Threading #6: Condition Variable
 // https://www.youtube.com/watch?v=13dFggo4t_I&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=7&t=0s
 #include <iostream>
