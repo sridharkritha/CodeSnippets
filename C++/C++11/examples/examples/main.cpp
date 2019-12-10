@@ -1,96 +1,5 @@
 #if 0
 
-
-
-
-
-
-#if 0
-
-/* packaged_task */
-
-std::mutex mu;
-std::deque<std::packaged_task<int()> > task_q;
-
-int factorial(int N) {
-	int res = 1;
-	for (int i=N; i>1; i--)
-		res *= i;
-
-	return res;
-}
-
-void thread_1() {
-	for (int i=0; i<10000; i++) {
-		std::packaged_task<int()> t;
-		{
-			std::lock_guard<std::mutex> locker(mu);
-			if (task_q.empty()) 
-				continue;
-			t = std::move(task_q.front());
-			task_q.pop_front();
-		}
-		t();
-	}
-}
-
-int main() {
-	std::thread th(thread_1);
-
-	std::packaged_task<int()> t(bind(factorial, 6));  
-	std::future<int> ret = t.get_future();
-	std::packaged_task<int()> t2(bind(factorial, 9));
-	std::future<int> ret2 = t2.get_future();
-	{
-		std::lock_guard<std::mutex> locker(mu);
-		task_q.push_back(std::move(t));
-		task_q.push_back(std::move(t2));
-	}
-	cout << "I see: " << ret.get() << endl;
-	cout << "I see: " << ret2.get() << endl;
-
-	th.join();
-	return 0;
-}
-
-
-
-/* Summary
- * 3 ways to get a future:
- * - promise::get_future()
- * - packaged_task::get_future()
- * - async() returns a future
- */
-
-
-
-
-
-
-
-
-
-
-
-
-
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 
 #include <iostream>
@@ -112,12 +21,155 @@ int main()
 
 
 
-
-
-
-
 #else
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Ref: C++ Threading #10: Review and Time Constraint
+// https://www.youtube.com/watch?v=3wpBk5Y3gfk&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=10
+#include<iostream>
+#include<thread>
+#include<mutex>
+#include<condition_variable>
+#include<future>
+using namespace std;
+
+/* threads with time constrains */
+int square(int N) {
+	int res = N * N;
+	return res;
+}
+
+int main() {
+	/* thread */
+	std::thread t1(square, 6); // create a thread object and spawn the thread
+	// Add time/sleep constraints. 1: sleep, 2: time point
+	std::this_thread::sleep_for(chrono::milliseconds(3));
+	chrono::steady_clock::time_point tp = chrono::steady_clock::now() + chrono::microseconds(4);
+	std::this_thread::sleep_until(tp);
+
+	/* Mutex */
+	std::mutex mu; // mutux for synchronize the data access
+	mu.lock();   // DONN'T use this mutux own method. It is NOT recommended.
+	mu.unlock(); // DONN'T use this mutux own method. It is NOT recommended.
+	std::lock_guard<mutex> locker(mu);	// lock/unlock single time. For simple usage.
+	std::unique_lock<mutex> ulocker(mu); // lock/unlock multiple times. Also transfter the ownership to another unique_lock
+	// Add time constraint
+	ulocker.try_lock(); // In this method you cann't add time constraint
+	ulocker.try_lock_for(chrono::nanoseconds(500)); // If 500 has past and mutux still can not be locked then function will return
+	ulocker.try_lock_until(tp);
+
+	/* Condition Variable */
+	std:condition_variable cond; // To synchronize the execution order of the threads
+	// Add time constraint
+	cond.wait_for(ulocker, chrono::microseconds(2)); // NOTE: ulocker as a first parameter
+	cond.wait_until(ulocker, tp);
+
+	/* Future and Promise */
+	std::promise<int> p;// p is promised to send an integer variable
+	std::future<int> f = p.get_future(); // f is a future which can fetch integer variable which was send over by p in the past.
+	// Add time constraint
+	f.get(); // get() internally call wait()
+	f.wait(); // other method supported by future but does not take time constraint
+	f.wait_for(chrono::milliseconds(2));
+	f.wait_until(tp);
+
+	/* async() - for excuting the 'square' function it EITHER spawn a new 'child thread' OR execute in the 'current thread'. */
+	std::future<int> fu = async(square, 6); // It returns future.
+	// NO direct time constraint support
+
+	/* Packaged Task */
+	std::packaged_task<int(int)> t(square);
+	std::future<int> fu2 = t.get_future(); // It returns future.
+	t(6);
+	// NO direct time constraint support
+
+	return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Ref: C++ Threading #9: packaged_task
+// https://www.youtube.com/watch?v=FfbZfBk-3rI&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=9
+#include <iostream>
+#include <future>		// thread, async, call_once
+#include <functional>	// bind
+#include <deque>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+using namespace std;
+
+std::deque<int> q;
+std::mutex mu;
+std::condition_variable cond; // synchronize the excution sequence of the threads
+std::deque<std::packaged_task<int()>> task_q;
+
+void consumerThread() {
+	std::packaged_task<int()> t;
+	{	// brace is must ??
+		std::unique_lock<std::mutex> locker(mu);
+		cond.wait(locker, []() { return !task_q.empty(); });
+
+		t = std::move(task_q.front()); // should be called after push back in the main thread
+		task_q.pop_front();
+		locker.unlock();
+	}
+	t();
+}
+
+// Thread function returns value
+int squareFuture(int N) {
+	int res = N * N;
+	return res;
+}
+
+int main()
+{
+	// packaged_task<int(int)>  - Template class which takes a function which takes integer and return integer.
+	// It returns future by 'get_future()'
+	std::packaged_task<int(int)> pt(squareFuture); // pt is a task being packaged up with a package (squareFuture).
+	// It can be passed along different places such as different function, different object or different threads
+
+	// do something else
+	pt(6); // always return void
+	int result = pt.get_future().get(); // to get the return value
+
+	// Passing parameters with the help of bind. bind converts the 'function with argument' into 'function object'.
+	// std::thread t1(squareFuture, 6);
+	std::packaged_task<int()> pt(std::bind(squareFuture,6)); // internally links the callable object with FUTURE
+	// do something else
+	pt(); // always return void
+
+	// Function object
+	auto fo = std::bind(squareFuture,6); // NO FUTURE linkage here
+	// do something else
+	fo(); // always return void
+
+	std::thread t1(consumerThread);
+	std::packaged_task<int()> pt(std::bind(squareFuture,6)); // internally links the callable object with FUTURE
+	std::future<int> fut = pt.get_future();
+	{ // brace is must ??
+		std::unique_lock<mutex> locker(mu);
+		task_q.push_back(std::move(pt)); // NOTE: move
+	}
+	cond.notify_one();
+	
+	// do something else
+	// int result = pt.get_future().get();
+	int result = fut.get();
+
+	t1.join();
+	return 0;
+}
+
+
+// 3 ways to get a future:
+// 	- promise::get_future()
+// 	- packaged_task::get_future()
+// 	- async() returns a future
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: C++ Threading #8: Using Callable Objects
 // https://www.youtube.com/watch?v=nU18p75u1oQ&list=PL5jc9xFGsL8E12so1wlMS0r0hTQoJL74M&index=8
 #include <iostream>
