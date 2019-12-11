@@ -1,6 +1,70 @@
-#if 0
+#if 1
+// Ref: Advanced C++: const and Functions
+// https://www.youtube.com/watch?v=RC7uE_wl1Uc&list=PLE28375D4AC946CC3&index=2
+#include <iostream>
+using namespace std;
+
+// const used with functions
+class Dog {
+   int age;
+   string name;
+public:
+   Dog() { age = 3; name = "dummy"; }
+   
+   // 1. const reference input parameters - most common in c++
+   void setAge(const int& a) // here const is even can be used for FUNCTION overloading 
+	{   age = a; 
+	  // ++a; // ERROR - Cannot modifiable
+	} 
+   void setAge(int& a) { } // Function overloading by removing const
+   // void setAge(const int a) { } //  CANNOT be overloded
+   // void setAge(int a) { } // CANNOT be overloded
+   void setAgeDouble(const int a) { } // const is NOT useful in this case bcos pass by value
+   
+   // 2. Const reference return
+   const string& getName() {return name;}
+   const string getLastName() { } // const is NOT useful in this case bcos return by value
+   // cannot overload functions distinguished by return type alone
+   const string& getFirstName() { } // const is NOT useful in this case bcos return by value
+//    string& getFirstName() { } // ERROR - cannot overload functions distinguished by return type alone
+// const string getFirstName() { } // ERROR - cannot overload functions distinguished by return type alone
+   
+   // 3. const FUNCTION
+   void printDogName() const  // here const is even can be used for FUNCTION overloading 
+   { 
+	   cout << name << "const" << endl; 
+		//	age++; // ERROR - MEMBER variable CANNOT be changed
+		//	getName() // ERROR - getName() is NOT const FUNCTION
+   }
+   void printDogName() { cout << getName() << " non-const" << endl; } // FUNCTION overloading
+};
+
+int main() {
+   Dog d;
+   int i = 9;
+   d.setAge(i);
+   const string& n = d.getName();
+   d.printDogName(); // dummy non-const
+   
+   const Dog d2;
+   d2.printDogName(); // dummy const
+   
+}
+
 
 /*
+
+// Ref:
+// 
+#include <iostream>
+using namespace std;
+
+int main()
+{
+
+
+	return 0;
+}
 
 #include <iostream>
 
@@ -22,7 +86,53 @@ int main()
 
 
 #else
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Advanced C++: const
+// https://www.youtube.com/watch?v=7arYbAhu0aw&list=PLE28375D4AC946CC3
+#include <iostream>
+using namespace std;
 
+int main()
+{
+	// const - A COMPILE time constraint that an object can not be modified
+	const int i = 5;
+	// i = 10; // ERROR - compile time not run time error
+
+	const int *p1 = &i;  // data is const, pointer is not
+	// *p1 = 5; // ERROR - compile time not run time error
+	p1++;    // OK
+
+	int j;
+	int* const p2 = &j;  // pointer is const, data is not
+	// int* const p2 = &i;  // ERROR - compile time - "const int *" cannot be initialized by "int *const"
+	const int* const p3 = &i;  // data and pointer are both const
+
+	// Triky one
+	int const *p4 = &i;   // data is const, pointer is not
+	const int *p4 = &i;   // same as above and more readable
+	// If const is on the left  of *, data is const
+	// If const is on the right of *, pointer is const
+
+	// Remove the constness
+	const int x = 9;
+	// x = 10; // Error
+	const_cast<int&>(x) =  10; // OK
+
+	// Adding constness
+	int y = 2;
+	static_cast<const int&>(y) = 8; // ERROR - Y is const at this point
+	y = 10; // OK - Y is not const at this point so you can change
+
+	return 0;
+}
+
+/*
+Why use const
+a.) Guard against inadvertent write to the variable.
+b.) Self documenting
+c.) Enable compiler to do more optimiztion, making code tighter.
+d.) const usually means the variable is put in ROM.
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Ref: C++ Threading #10: Review and Time Constraint
