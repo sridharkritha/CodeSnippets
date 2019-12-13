@@ -50,15 +50,46 @@ int main() {
 
 // Expression Vs Statement
 // Ref: https://2ality.com/2012/09/expressions-vs-statements.html
+// Ref: http://www.informit.com/articles/article.aspx?p=2472079&seqNum=4
+// Ref: http://www.informit.com/articles/article.aspx?p=2472079&seqNum=4
+
+C++ distinguishes between expressions and statements.Very casually, we could say that every expression becomes a statement if a semicolon is appended.
+
 Expression: 
-1. An expression return a value and can be written wherever a value is expected.
-2. Wherever a place expects a statement, you can also write an expression.
-Ex : 2 + 5 * 8, myVariable, myFunction(3)
+	1. An expression return a value and can be written wherever a value is expected.
+	2. Wherever a place expects a statement, you can also write an expression.
+	3. Any variable name(x, y, z, . . .), constant, or literal is an expression. 
+	4. One or more expressions combined by an operator constitute an expression, e.g., x + y or x * y + z (without semicolon)
+	5. In several languages, such as Pascal, the assignment is a statement. In C++, it is an expression, e.g., x = y + z.
+	6. As a consequence, it can be used within another assignment : x2 = x = y + z.Assignments are evaluated from right to left.
+	7. A function call with expressions as arguments is an expression, e.g., abs(x) or abs(x * y + z). Therefore, function calls can be nested : pow(abs(x), y).
+	   Note that nesting would not be possible if function calls were statements.
+	8. Since assignment is an expression, it can be used as an argument of a function : abs(x = y).
+	More ex : 2 + 5 * 8, myVariable, myFunction(3)
+
 	Statement :
-	1. Return NOTHING.But it performs action.
-	2. You cannot place the statement in the place of expression is needed.
+		1. Any of the expressions above followed by a semicolon is a statement, 
+		e.g. : x = y + z; 
+	2. Return NOTHING.But it performs action.
+	3. You cannot place the statement in the place of expression is needed.
 	Ex : 1. for, if, break, return, case, while etc.,
-	2. an if statement cannot become the argument of a function.
+		 2. an if statement cannot become the argument of a function.
+
+		For example, C has two forms of conditional, 
+		
+		the statement form
+							if (E) S1; else S2;
+	   the expression form
+
+							E ? E1 : E2
+
+
+		* An expression is created when one or more operators are combined; for example x *= y % z
+		* Every expression(even assignment) has a type and a result
+		* Operator precedence provides an unambiguous interpretation for every expression
+		* An expression(e.g.x = 0) becomes a statement when followed by a semicolon(i.e.x = 0;)
+		* Several expressions can be separated using a comma ‘, ’; expressions are then evaluated left to right; for example: x = 0, y = 1.0
+		* The type and value of a comma - separated expression is the type and value of the result of the right - most expression
 
 	a = 5, b = 10;
 	x = a++, b++;
