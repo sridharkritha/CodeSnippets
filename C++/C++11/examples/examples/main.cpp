@@ -53,6 +53,9 @@ int main() {
 // Ref: http://www.informit.com/articles/article.aspx?p=2472079&seqNum=4
 // Ref: http://www.informit.com/articles/article.aspx?p=2472079&seqNum=4
 
+IMPORTANT************
+more to refer: https://stackoverflow.com/questions/51942943/why-does-return-0-or-break-not-work-with-the-comma-operator
+
 C++ distinguishes between expressions and statements.Very casually, we could say that every expression becomes a statement if a semicolon is appended.
 
 Expression: 
@@ -84,12 +87,14 @@ Expression:
 							E ? E1 : E2
 
 
-		* An expression is created when one or more operators are combined; for example x *= y % z
+
+		* An expression is created when one or more operators are combined; for example x *= y % z
 		* Every expression(even assignment) has a type and a result
 		* Operator precedence provides an unambiguous interpretation for every expression
 		* An expression(e.g.x = 0) becomes a statement when followed by a semicolon(i.e.x = 0;)
-		* Several expressions can be separated using a comma ‘, ’; expressions are then evaluated left to right; for example: x = 0, y = 1.0
-		* The type and value of a comma - separated expression is the type and value of the result of the right - most expression
+		* Several expressions can be separated using a comma ï¿½, ï¿½; expressions are then evaluated left to right; for example: x = 0, y = 1.0
+		* The type and value of a comma - separated expression is the type and value of the result of the right - most expression
+
 
 	a = 5, b = 10;
 	x = a++, b++;
