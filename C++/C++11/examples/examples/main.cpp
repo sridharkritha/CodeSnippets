@@ -96,6 +96,18 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 #else
 /* $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
 // Ref:
@@ -109,6 +121,296 @@ int main()
 
 	return 0;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: https://www.youtube.com/watch?v=EYuPBkgJtCQ&list=PLE28375D4AC946CC3&index=18
+// Advanced C++: Inheritance - Public, Protected, and Private
+#include <iostream>
+using namespace std;
+
+	// Public, Protected, Private Inheritance 
+	class B { };
+	class D_pub  : public    B { };
+	class D_prot : protected B { };
+	class D_priv : private   B { };
+
+/*
+	They specifies different access control from the derived class to the base class.
+	Access Control:
+	1. NONE of the derived classes can access anything that is PRIVATE in B.
+	2. D_pub  inherits public members of B as PUBLIC and the protected members of B as PROTECTED
+	3. D_prot inherits the public and protected members of B as PROTECTED.
+	4. D_priv inherits the public and protected members of B as PRIVATE.
+
+	Casting:
+	1. ANYONE can cast a D_pub* to B*. D_pub IS A special kind of B. [only IS-A / Derived IS A kind of Base]
+	2. D_prot's MEMBERS, FRIENDS, and CHILDREN can cast a D_prot* to B*.
+	3. D_priv's MEMBERS and FRIENDS can cast a D_priv* to B*. [HAS-A / ]
+
+*/
+
+// Detailed Example
+class B { 
+   public:
+      void f_pub() { cout << "f_pub is called.\n"; }
+   protected:
+      void f_prot() { cout << "f_prot is called.\n"; }
+   private:
+      void f_priv() { cout << "f_priv is called.\n"; }
+};
+
+
+// Public Inheritance
+class D_pub : public B { 
+   public: 
+      void foo() {
+         f_pub();   // OK. D_pub's PUBLIC function
+         f_prot();  // OK. D_pub's protected function
+         f_priv();  // Error. B's private function 
+      }
+};
+
+// Protected Inheritance
+class D_prot : protected B { 
+   public: 
+    // using B::f_pub; // Declaration brings f_pub function into the scope D_prot
+      void foo() {
+         f_pub();   // OK. D_pub's protected function
+         f_prot();  // OK. D_pub's protected function
+         f_priv();  // Error. B's private function 
+      }
+};
+
+
+// Private Inheritance
+class D_priv : private B { 
+   public:
+	// using B::f_pub; // Declaration brings f_pub function into the scope D_prot
+      void f() {
+         f_pub();   // OK. D_priv private function
+         f_prot();  // OK. D_priv private function
+         f_priv();  // Error. B's private function 
+      }
+};
+
+int main() {
+   D_pub D1;
+   D1.f_pub();  // OK. f_pub() is D_pub's public function.
+   D1.f_prot(); // Error. f_prot() is D_pub's PROTECTED function you cann't access from main function.
+
+   D_prot D2;
+   D2.f_pub();  // Error. f_pub() is D_priv's private function.
+   D2.f_pub();  // OK if you have a declartion 'using B::f_pub' under PUBLIC of D_prot
+
+   D_priv D2;
+   D2.f_pub();  // OK if you have a declartion 'using B::f_pub' under PUBLIC of D_priv
+
+   B* pB = &D1; // OK
+   pB = &D2;    // Error - You cann't
+}
+
+
+
+
+
+
+Simillarity between  Private Inheritance and Composition:
+
+// Private inheritance: HAS-A relation.similar to COMPOSITION. one contains another.
+class Ring {
+   public:
+   void tinkle() { }
+};
+
+// Private Inheritance == Composition
+class Dog_Priv : private Ring {
+   public:
+   using Ring::tinkle; // Brings Dog's public interface
+};
+
+// Composition == Private Inheritance
+class Dog {
+   Ring m_ring;
+   public:
+   void tinkle() { m_ring.tinkle(); }  // call forwarding
+};
+// 
+
+Difference between  Private Inheritance and Composition:
+
+class Ring {
+   virtual tremble();
+   public:
+   void tinkle() { tremble(); }
+   protected:
+   void foo() { }
+};
+
+// Private Inheritance
+class Dog_Priv : private Ring {
+	 // Also have an ACCESS to Dog's PROTECT members
+   public:
+   using Ring::tinkle; // Brings Dog's public interface
+  
+};
+
+// Composition
+class Dog {
+	// NO access to Dog's PROTECT members
+   Ring m_ring;
+   Ring m_ring2;
+   public:
+   void tinkle() { m_ring.tinkle(); }  // call forwarding using m_ring
+   void shine() { m_ring2.tinkle(); }  // call forwarding using m_ring2
+};
+
+
+class Ring {
+   private:
+   virtual void tremble() { cout<< "Ring::temble()" << endl; };
+   public:
+   void tinkle() { tremble(); }
+   void glitter() { cout<< "Ring::glitter()" << endl; };
+};
+
+// Private Inheritance
+class Dog_Priv : private Ring {
+	void tremble() { cout<< "Dog_Priv::temble()" << endl; };
+	void glitter() { cout<< "Dog_Priv::glitter()" << endl; };
+	 // Also have an ACCESS to Dog's PROTECT members
+   public:
+   using Ring::tinkle; // Brings Dog's public interface
+   using Ring::glitter;
+};
+
+int main() {
+	Dog_Priv d;
+	d.tinkle(); // Dog_Priv::temble() - INDIRECTLY ACCESSING Dog_Priv private function in main
+	d.glitter(); // ERROR - Dog_Priv private function CANN'T be accessed in main
+}
+
+
+
+
+/*
+	Preference:
+	composition: Decoupled and better object oriented design. More preferred!.
+	private inheritance: more elegant polymorphism.
+ *
+ * E.g. in class ring, add virtual function: tremble(), which is
+ *    used in tinkle().
+ */
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Advanced C++: All Castings Considered - Part II
+// https://www.youtube.com/watch?v=UfrR1nNfoeY&list=PLE28375D4AC946CC3&index=17
+#include <iostream>
+using namespace std;
+// Casting could be risky.
+
+class dog {
+public:
+	// Atleast only virtual function is needed to use dynamic_cast. Having only Virtual destructor is also OK.
+	virtual ~dog() {} 
+	virtual void fly() {  cout<< "Dog cannot fly" << endl;  }
+};
+
+class yellowdog : public dog {
+	int age = 5;
+public:  
+	void run()  { cout<< "I run fast"  << endl; }
+	void bark() { cout<< "woof. I am " << age  << endl; }
+	void fly()  { cout<< "Yellow Dog cannot fly. I am " << age  << endl; }
+};
+
+int main() {
+	dog* pd = new dog();
+
+	// STATIC CAST
+	yellowdog* py_ds = static_cast<yellowdog*>(pd); // ALWAYS SUCCEED - BECAREFUL
+	cout << "pd = " << pd << endl;       // 0106A2C0
+	cout << "py_ds = " << py_ds << endl; // 0106A2C0 (SAME ADDRESS)
+	// compiler considers run() as STATIC FUNCTION 
+	py_ds->run();  // I run fast
+	py_ds->bark(); // woof. I am -33686019 (some random number) - WRONG
+
+	
+	// DYNAMIC CAST - WRONG
+	// NOT all dog's are yellowdog's
+	yellowdog* py_dc = dynamic_cast<yellowdog*>(pd); // dynamic_cast FAIL 
+	cout << "pd = " << pd << endl;       // 00EDB8B8
+	cout << "py_dc = " << py_dc << endl; // 00000000
+	// compiler considers run() as STATIC FUNCTION 
+	py_dc->run();  // I run fast <- EVENTHOUGH py is a NULL POINTER
+	py_dc->bark(); // CRASH - CANNOT consider as STATIC FUNCTION bcos it uses member variable
+
+	// POLYMORPHIC way without any cast
+	yellowdog* deriverPtr = new yellowdog();  // yellowdog* pd = new dog(); <- WRONG way of usage
+	dog* basePtr = deriverPtr;
+	basePtr->fly();    // YellowDog or Dog depends on existance of virtual key word
+	deriverPtr->fly(); // Yellow Dog cannot fly. I am 5 <- ALWAYS YellowDog
+
+	// Polymorphic way (STACK based objects)
+	yellowdog derived;
+	dog* basePtr = &derived;
+	basePtr->fly();
+	
+	return 0;
+}
+
+// CONST CAST - casting could be a handy hack tool
+class dog {
+	public:
+	std::string m_name;
+	dog():m_name("Bob") {}
+	void bark() const { // object pointer by *this is CONST so you cann't change its content.
+		// m_name = "Henry";
+		const_cast<dog*>(this)->m_name = "Henry"; // BUT you can change by const_cast
+		std::cout << "My name is " << m_name << std::endl;
+	}
+};
+
+
+/*
+ * =========================================  C++ Style Casting ================================
+ *                             Generate_Code   Generate_data      risky   data_type
+ * Object Casting:            
+ *    static_cast                 yes              yes             2      any types
+ *                                                                       (as long as type 
+ *                                                                       conversion is defined)
+ * Pointer/Reference Casting:
+ *    static_cast                 no               no              4     related types
+ *    dynamic_cast                yes              no              3     related types(down-cast)
+ *    const_cast                  no               no              1     same type
+ *    reinterpret_cast            no               no              5      any types
+ *
+ *
+ *
+ *
+ *
+ * =========================================  C Style Casting ================================
+ *                             Generate_Code  Generate_data      risky   data_type
+ * Object Casting:               yes              yes             5      any types
+ *                                                                       (as long as type 
+ *                                                                       conversion is defined)
+ * Pointer/Reference Casting:    no               no              5      any types
+ *
+ *
+ * Notes can be downloaded at my website: boqian.weebly.com
+ *
+ * Note:
+ * 1. const_cast, dynamic_cast and reinterpret_cast can only work on pointers/references.
+ * 2. static_cast of objects is very different from static_cast of pointers. 
+ * 3. reinterpret_cast basically reassigning the type information of the bit pattern. 
+ *    It should only be used in low-level coding.
+ * 4. dynamic_cast does static_cast plus run-time type check.
+ * 5. dynamic_cast and static_cast for pointers can only work on related type (e.g., 
+ *    base <-> derived).
+ *
+ */
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
  * All Castings Considered
