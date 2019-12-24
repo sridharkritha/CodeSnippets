@@ -6,108 +6,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #else
 /* $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
 // Ref:
@@ -121,6 +19,803 @@ int main()
 
 	return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: https://www.youtube.com/watch?v=ZBK7aZ8v6vE&list=PLE28375D4AC946CC3&index=27
+// Advanced C++: Koenig Lookup and Namespace Design
+
+/*
+ * Why Koenig Lookup?
+ */
+
+// Example 1:
+namespace A
+{
+   struct X {};
+   void g( X ) { cout << " calling A::g() \n"; }
+   void g( ) { cout << " calling A::g() \n"; }
+}
+
+int main() {
+   A::X x1;
+   g(x1);   // Koenig Lookup, or Argument Dependent Lookup (ADL)
+   g();     // Error
+}
+
+Two reason for using Koenig Lookup :
+// 1. The Practical Reason for using Koenig Lookup
+	std::operator<<(std:cout, "Hi. \n");
+	// Other way of writing above by using Koenig Lookup
+	std::cout << "Hi.\n"; // definition of << (std::operator<<) is found inside std namespace by Koenig Lookup
+	// If there is NO Koenig Lookup then 
+	std::cout std::<< "Hi.\n"; // Error
+
+// 2. Theoretical Reason: What is the interface of a class?
+namespace A
+{
+   class C {
+      public:
+	  // Inferfaces of C
+      void f() = 0;
+      void g() = 0;
+   };
+   void h(C); // ALSO Inferface of C
+   ostream& operator<<( ostream&, const C& ); // ALSO Inferface of C
+}
+void j(C); // NOT a Inferface of C bcos outsidie the namespace A
+
+/*
+ Definition of class: 
+ 	A class describes a set of data, along with the functions(NOT only member function) that operate on that data.
+ */
+
+/* 
+ Class Interface includes: 
+	1. Functions that operate on class C and in a same namespace with C are part of C's interface.
+	2. Functions that are part of C's interface should be in the same namespace as C.
+
+ */
+// C class interfaces
+   A::C c; 
+   c.f();
+   h(c);
+
+namespace A { 
+   class C {}; 
+   int operator+(int n, A::C) { return n+1; } // User defined operator +
+}
+
+int main()
+{
+   A::C arr[3]; 
+   std::accumulate(arr, arr+3, 0);  // return 3
+}
+
+// accumulate - Defined in C++ standard library <numeric>
+namespace std {
+   template <class InputIterator, class T>
+      T accumulate ( InputIterator first, InputIterator last, T init )
+   {
+     while ( first!=last )
+       init = init + *first++;  // calls user defined operator + using Koenig lookup instead of operator + from std namespace.
+     return init;
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Advanced C++: Namespace and Keyword "using"
+// https://www.youtube.com/watch?v=YliqZh6s9ig&list=PLE28375D4AC946CC3&index=25
+
+// 1. using namespace - directive [ONLY namespace]: to bring all namespace members into current scope
+   using namespace std;
+
+
+ 
+// 2. using - declaration [namespace / Class]:
+//		a. Bring one specific namespace member to current scope. 
+//		b. Bring a member from base class(NOT namespace) to current class's scope. 
+
+   using std::cout;
+   using B::f; 
+
+
+
+using namespace std;  // case 1:   global scope
+using std::cout;      // case 2.a: global scope
+
+class B {
+   public:
+   void f(int a);
+};
+ 
+class D : private B { 
+   public:
+      void g() { 
+         using namespace std;  // case 1: local scope
+         cout << "From D: \n";
+      }
+      void h() { 
+         using std::cout;     // case 2.a: local scope
+         cout << "From D: \n";
+      }
+	  // f() is privately derived so it cann't be accessed outside. BUT 'using B::f;' brings to current scope and made it possible !
+      using B::f;   // case 2.b:  class scope
+
+	  // using std::cout;     // illegal - it cann't be in class scope
+	  // using namespace std; // illegal - it cann't be in class scope
+};
+
+D d;
+d.f(8); // works even it is privately derived function
+
+/* 
+	Notes:
+	1. using declaration and using directive, when used on namespace, can be used in global or local scope.
+	2. using declaration, when used on class members. It should be used in class scope.
+ */
+
+
+// Name Hiding in CLASS:
+class B {
+   public:
+      void f(int a);
+};
+ 
+class D : public B { 
+   public:
+    // using B::f; // AVOIDS name hiding problem
+    void f();      // Name Hidding: f() hides the base f(int a)
+};
+
+int main() {
+   D d;
+   d.f(8); // ERROR bcos of name hiding
+}
+
+#include<iostream>
+// Anonymous Namespace - Namespace doesn't have any name.
+void g() { std::cout << "global g()\n"; }
+
+namespace {
+	// Within a FILE you can access it like a global functions but it CANN'T be accessed from another FILE just 
+	// like a STATIC function [ex: static void h() { std::cout << "h()\n"; } ]
+	void g() { std::cout << "g()\n"; }
+	void h() { std::cout << "h()\n"; g(); } // call the locall g() defined inside the namespace
+}
+
+int main() {
+   h(); // calls h() inside the anonymous namespace
+   g();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Ref: Advance C++: Koenig Lookup - Argument Dependent Lookup (ADL)
+// https://www.youtube.com/watch?v=TxgPZXe8XTo&list=PLE28375D4AC946CC3&index=26
+
+// Increases the function name search scope
+
+
+
+// Example 1:
+// Koenig Lookup or Argument Dependent Lookup (ADL)
+namespace A
+{
+   struct X {};
+   void g( X ) { cout << " calling A::g() \n"; }
+}
+
+// void g( X ) { cout << " calling A::g() \n"; } // Ambiguous
+
+int main() {
+   A::X x1;
+   A::g(x1); // OK
+   g(x1);    // NO error - it works !! bcos of Koenig Lookup, or Argument Dependent Lookup (ADL)
+   // Compiler searches function name 'g' in 
+   // 1. current scope, 
+   // 2. scope where it param type has defined - by Koenig lookup and 
+   // 3. global scope.
+}
+
+
+// Example 2:
+class C {
+   public:
+   struct Y {};
+   static void h(Y) { cout << "calling C::h() \n"; }
+};
+
+int main() {
+   C::Y y;
+   C:: h(y); // OK
+   h(y);     // Error bcos Koenig Lookup NOT works for class. It works only for namespace.
+}
+
+
+// Example 3:
+namespace A {
+   struct X {};
+   void g( X ) { cout << " calling A::g() \n"; }
+   void h( X ) { cout << " calling A::h() \n"; }
+}
+
+namespace C {
+   void g(A::X ) { cout << "calling C::g() \n" ; }
+   void j() {
+      A::X x;
+	  h(x); // OK by Koenig Lookup
+      g(x); // ERROR - Ambiguous bcos it sees 2 versions - g( X ) by local and g(A::X ) by Koenig Lookup 
+   }
+};
+
+int main() {
+   C::j();
+}
+
+// Example 4:
+namespace A {
+   struct X {};
+   void g( X ) { cout << " calling A::g() \n"; }
+   void h( X ) { cout << " calling A::h() \n"; }
+}
+
+class C {    // Changed from namespace to class
+public:
+   void g(A::X ) { cout << "calling C::g() \n" ; }
+   void j() {
+      A::X x;
+	  h(x); // OK by Koenig Lookup
+      g(x); // OK - no ambiguity. In class, once g is found in the local scope it STOPS further search.
+   }
+};
+
+int main() {
+	C c;
+    c.j();
+}
+
+
+// Example 5:
+namespace A
+{
+   struct X {};
+   void g( X ) { cout << " calling A::g() \n"; }
+}
+
+class B {
+   void g(A::X ) { cout << "calling B::g() \n" ; }
+};
+
+class C : public B {
+   public:
+   void j() {
+      A::X x;
+      g(x); // OK - no ambiguity. calling B::g()
+   }
+};
+
+int main() {
+   C c;
+   c.j();
+}
+
+// Name hiding for NAMESPACE
+namespace A
+{
+   void g(int) { std::cout << " calling A::g() \n"; }
+
+   namespace C {
+	  // Name hiding: g() hides g(int)
+      void g() { std::cout << "calling C:g() \n" ; }
+      void j() {
+         //using A::g; // solves the name hiding problem
+         g(9); // Error - Ambiguous
+      }
+   }
+}
+
+int main() {
+   A::C::j();
+}
+
+
+namespace A
+{
+   struct X {};
+   void g(X) { std::cout << " calling A::g() \n"; }
+
+   namespace C {
+	  // Name hiding: g() hides g(X)
+      void g( ) { std::cout << "calling C:g() \n" ; }
+      void j() {
+         X x;
+         g(x); // NO Error by name hiding. Bcos it uses by Koenig Lookup and prints - calling A::g()
+      }
+   }
+}
+
+int main() {
+   A::C::j();
+}
+
+
+/*
+	  Name Lookup Resolution Sequence
+
+	  With namespaces:
+	  current namespace scope(higher priority) > next enclosed scope(lower priority) > ... > global scope(lowest priority)
+
+	  To override the resolution sequence:
+	  1. Qualifier or using declaration
+	  2. Koenig lookup
+
+	  With classes:
+	  current class scope(higher priority) > parent scope(lower priority) > ... > global scope(lowest priority)
+
+	  To override the resolution sequence:
+	   - Qualifier or using declaration (CANNT use Koenig lookup)	
+
+	  Name hiding: name in the higher priority scope overrides the same name in the next lower priority scope
+ */
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Advanced C++: Code Reuse - Inheritance vs Composition
+// https://www.youtube.com/watch?v=tXFqS31ZOFM&list=PLE28375D4AC946CC3&index=24
+
+// Code Reuse with Inheritance
+class Dog {   // BaseDog - Don't use Base in the class name it breaks the implementation details
+	// common activities
+};
+
+class BullDog : public Dog {
+	// Call the common activities to perform more tasks.
+};
+
+class ShepherdDog : public Dog {
+	// Call the common activities to perform more tasks.
+};
+
+
+// Code Reuse with Composition
+class ActivityManager {
+	void eatBiscuit() { ... } // common activities
+};
+
+class Dog {
+	virtual void eatBiscuit() = 0; // Inherit only from pure abstract class
+};
+
+class BullDog : public Dog {
+	ActivityManager* pActMngr;
+	// Call the common activities through pActMngr
+	void eatBiscuit() { pActMngr->eatBiscuit(); }
+};
+
+class ShepherdDog : public Dog {
+	ActivityManager* pActMngr;
+	// Call the common activities through pActMngr
+	void eatBiscuit() { pActMngr->eatBiscuit(); }
+};
+
+
+/*
+	Code reuse: Composition is better than Inheritance
+	1. Less code coupling between reused code and reuser of the code 
+	   a. Child class automatically inherits ALL parent class's public members.
+	   b. Child class can access parent's protected members.
+	      - Inheritance breaks encapsulation
+
+	2. Dynamic binding
+	   a. Inheritance is bound at compile time
+	   b. Composition can be bound either at compile time or at run time.
+ */
+
+/*
+Inheritance Guidline:
+	Never use inheritance for code reuse!
+	Inherit interfaces only; never inherit implementation!
+	All base classes should be Pure Abstract Classes!
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The Duality of Public Inheritance
+//   - Inheritance of Interface
+//   - Inheritance of Implementation
+
+// Ref: Advanced C++: Duality Of Public Inheritance - Interface & Implementation
+// https://www.youtube.com/watch?v=iFK-D13LX2U&list=PLE28375D4AC946CC3&index=23
+
+class Dog {
+public:
+	// Pure Virtual Function - support ONLY Inheritance of Interface
+	virtual void bark() = 0;
+	// Non Virtual Function - supports BOTH Inheritance of Interface and Implementation
+	void run() { cout << "I am running."; } // Don't override it. Otherwise it breaks IS-A relationship
+	// Impure Virtual Function - supports Inheritance of Interface and DEFAULT Implementation
+	virtual void eat() { cout << "I am eating. "; } // Can be overriden if needed.
+protected:
+	// protected function support ONLY Inheritance of Implementation
+	void sleep() { cout << " I am sleeping. "; }
+};
+
+class Yellowdog : public Dog {
+public:
+	virtual void barks() { cout << "I am a yellow dog.\n";}
+	void iSleep() { sleep(); }
+};
+
+
+/*
+ 	Types of Inheritance in C++:
+ 	1. Pure virtual public function   - inherit interface only.
+ 	2. Non-virtual public function    - inherit both interface and implementation.
+ 	3. Impure virtual public function - inherit interface and default implementation
+ 	4. Protected function             - inherit implementation only
+ 	As a software designer, it is very important to separate the concepts of interface and implementation.
+ */
+
+
+/*
+ When to use - Interface Inheritance ?
+ 1. Subtyping - One type can be safely used instead of other type
+ 2. Polymorphism
+ 
+ */
+	virtual void bark() = 0;
+
+/*
+ * Pitfalls:
+ *  -- Be careful of interface bloat.
+ *  -- Interfaces do not reveal implementation.
+ */
+
+
+/*
+ Disadvantages of Implementation Inheritance 
+    - Increase code complexity
+    - Not encouraged to use it
+ */
+public:
+	// Supports both Interface and Implementation - NOT bad.
+	void run() { cout << "I am running."; }
+	virtual void eat() { cout << "I am eating. "; }
+protected:
+	// ONLY Implementation inheritance - NOT encouraged
+	void sleep() { cout << " I am sleeping. "; }
+
+/*
+ Guidelines for Implementation Inheritance:
+ 	1. Do not use inheritance for code reuse, use composition.
+ 	2. Minimize the implementation in base classes. Base classes should be thin.
+ 	3. Minimize the level of hierarchies in implementation inheritance.
+ */
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Advanced C++: Multiple Inheritance - Devil or Angel
+// https://www.youtube.com/watch?v=7APovvvftQs&list=PLE28375D4AC946CC3&index=22
+
+// Multiple Inheritance -- A class is directly derived from more than one base classes.
+class InputFile {
+   private:
+   		void open();
+   public:
+   		void read();
+};
+
+class OutputFile {
+   public:
+   		void open();
+   		void write();
+};
+
+class IOFile : public InputFile, public OutputFile {
+	// 2 different open() instances and 2 different write() instances
+};
+
+int main() {
+   IOFile f;
+   f.open(); // ambiguous error even though private open() is not accessible in main()
+   f.OutputFile::open(); // OK
+}
+
+Move the common parts to a separate common base class.
+
+class File {            //         File
+   public:              //         /  \        -
+   string name;         // InputFile  OutputFile
+   void open();         //         \  /
+};                      //        IOFile
+
+class InputFile  : public File { };
+class OutputFile : public File { };
+
+// Diamond shape of hierarchy
+class IOFile : public InputFile, public OutputFile {
+	// STILL 2 different open() instances and 2 different name instances even though it uses common base class File
+};
+
+int main() {
+   IOFile f;
+   f.open(); // ambiguous error - open() from which path of the Diamond shape hierarchy
+   f.InputFile::name = "File1"; 
+   f.OutputFile::name = "File2"; // Why we need 2 instance of 'name' ???
+}
+
+
+class File {            //         File
+   public:              //         /  \ 
+   string name;         // InputFile  OutputFile
+   void open();         //         \  /
+};                      //        IOFile
+
+class InputFile  : virtual public File { }; // Virtual Inheritance
+class OutputFile : virtual public File { };
+
+class IOFile : public InputFile, public OutputFile {
+	// Only one instance of open() and name bcos of virtual inheritance
+};  // Diamond shape of hierarchy
+
+int main() {
+   IOFile f;
+   f.open();         // OK
+   f.name = "File1"; // OK
+}
+
+// Problem by Initialization
+
+// Virtual base class
+class File {     
+   public:      
+   File(string fname);
+};             
+
+//  1st. File(fname) {} initialization is needed but IGNORED by the compiler 
+class InputFile : virtual public File {
+   InputFile(string fname) : File(fname) {}
+};
+
+//  2nd. File(fname) {} initialization is needed but ALSO IGNORED by the compiler 
+class OutputFile : virtual public File {
+   OutputFile(string fname) : File(fname) {}
+};
+
+// 3rd. File(fname) {} initialization USED by the compiler 
+// C++ Rule: Initialization of base virtual class is the responsibility of LAST derived class
+class IOFile : public InputFile, public OutputFile {
+   IOFile(string fname) : OutputFile(fname), InputFile(fname), File(fname) {}
+};  
+
+int main() {
+   IOFile f;
+}
+
+Better Solution would be using Pure Abstract Class it solves the problem of multiple object instances, multiple object initialization,
+multiple member functions/Data and even we do NOT need virtual inheritance. 
+Note: File, InputFile and OutputFile needs to change to PAC.
+
+
+/*
+   Abstract Class: A class has one or more pure virtural functions.
+ 
+   Pure Abstract Classes: 
+   A class containing only pure virtual functions
+     - no data 
+     - no concrete functions
+     - no private protected functions
+ */
+
+	class OutputFile {
+	public:
+	void write() = 0;
+	void open() = 0;
+	};
+
+// Interface Segregation Principle (ISP): Split large interfaces into smaller and more specific ones so that clients
+// only need to know about the methods that are of interest to them.
+
+class Engineer { // Pure Abstract Classes
+   public:
+   ...; // 40 APIs
+};
+
+class Son { // Pure Abstract Classes
+   public:
+   ...; // 50 APIs
+};
+
+class Andy : public Engineer, Son  // NO need for virtual inheritance
+{
+   public:
+   ...; // 500 APIs
+};
+
+/*
+ * Benefits of ISP:
+ * 1. Easy-to-use interfaces
+ * 2. Static type safety
+ */
+
+/*
+	* Summary:
+	* 1. Multiple Inheritance is an important technique, e.g. ISP
+	* 2. Derive only from PACs when using Multiple Inheritance.
+ */
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Convert Dynamic Polymorphism to Static Polymorphism
+/*
+	Disadvantages of Dynamic Polymorphism:
+	1. Extra Memory needed to create V-table.
+	2. Extra run time cost due to dynamic binding.
+*/
+
+// Ref: Advanced C++: Static Polymorphism
+// https://www.youtube.com/watch?v=-WV9vWjhI3g&list=PLE28375D4AC946CC3&index=21
+#include <iostream>
+using namespace std;
+
+// Dynamic Polymorphism
+struct Person { 
+	string name;
+	int age;
+};
+
+class Profession {
+   public:
+   void taxBand(Person* node) {
+      if (node) {
+         salaryBenefits(node);
+      }
+   }
+   private:
+   virtual void salaryBenefits(Person* node) { } // Dynamic Polymorphism
+};
+
+class Doctor : public Profession {
+   private:
+   void salaryBenefits(Person* node) {
+       cout << "Customized salaryBenefits() for Doctor.\n";
+   }
+};
+
+class Police : public Profession {
+   private:
+   void salaryBenefits(Person* node) {
+       cout << "Customized salaryBenefits() for Police.\n";
+   }
+};
+   
+int main() {
+   Person* p = new Person { "Rajesh", 25 };
+   Doctor doc;
+   doc.taxBand(p);
+
+   Police pol;
+   pol.taxBand(p);
+}
+// 
+/*
+ 3 things to be maintained in DYNAMIC to STATIC polymorphism conversion:
+	* I).   is-a relationship(public inheritance) between base class and derived class
+	* II).  Base class defines a "generic" algorithm(salaryBenefits) that's used by derived class
+	* III). The "generic" algorithm is customized by the derived class
+ */
+
+// Static Polymorphism / Simulated Polymorphism  - Conversion technique used is - CURIOUSLY RECURRING TEMPLATE PATTERN
+//		Disadvantage: Eventhough there is no usage of extra heap memory for Vtable and no run time cost of late binding.
+//		Different template classes (Doctor/Police) own its separate memory space in the program image [Size of exe will bit bigger]
+
+// TMP - Template Metaprogramming - Moving computation in runtime to compile time
+// Non-virtual Interface Idiom (NVI)
+template <typename T> class Profession {
+   public:
+   void taxBand(Person* node) {
+      if (node) {
+         salaryBenefits(node);
+      }
+   }
+   private: // NO more virtual function
+    void salaryBenefits(Person* node) { 
+		static_cast<T*>(this)->salaryBenefits(node);  // Static Polymorphism
+	}
+};
+
+class Doctor : public Profession<Doctor> {
+   private:
+   void salaryBenefits(Person* node) {
+       cout << "Customized salaryBenefits() for Doctor.\n";
+   }
+};
+
+class Police : public Profession<Doctor> {
+   private:
+   void salaryBenefits(Person* node) {
+       cout << "Customized salaryBenefits() for Police.\n";
+   }
+};
+
+// Other Static Polymorphism by Template
+template<typename T>
+T Max(std::vector<T> v) {
+	T max = v[0];
+	for(typename std::vector<T>::iterator it = v.begin(); it != v.end(); ++it) {
+		if(*it > max) {
+			max = *it;
+		}
+	}
+	return max;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Advanced C++: Maintain is-a Relation for Public Inheritance
+// https://www.youtube.com/watch?v=97iK5r3zNug&list=PLE28375D4AC946CC3&index=19
+#include <iostream>
+using namespace std;
+// Never Override Non-virtual Functions
+class Dog {
+   // Add virtual key word if you want polymorphism
+   public: void bark() { cout << "I am just a dog.\n";};
+};
+
+class Yellowdog : public Dog{
+   public: void bark() { cout << "I am a yellow dog.\n";};
+};
+
+int main() {
+   Yellowdog* py = new Yellowdog();
+   py->bark();  
+   Dog* pd = py;
+   pd->bark(); 
+}
+/*
+	// NOT a Polymorphism
+	I am a yellow dog.
+	I am just a dog.
+	// Polymorphism: DIFFERENT class objects act on SAME api will behave DIFFERENTLY.
+	I am a yellow dog.
+	I am a yellow dog.
+*/
+
+
+// Never redefine default parameter for the virtual function
+class Dog {
+   public: 
+   virtual void bark(string msg = "just a") { cout << "I am " << msg << " dog.\n";};
+   virtual void run(int speed) { cout << "I am run at speed of " << speed << endl;};
+};
+
+class Yellowdog : public Dog{
+ // Virtual functions are bound dynamically.
+ // Default parameters are bound STATICALLY.
+  public: 
+  void bark(string msg = "a yellow") { cout << "I am " << msg << " dog.\n";};
+  // Shadowing: After seeing the run(string), compiler STOP searching for another run() eventhough they have different args. 
+  void run(string txt = "I cann't run") { cout << txt << endl;};
+  using Dog::run;
+};
+
+int main() {
+   Yellowdog* py = new Yellowdog();
+   Dog* pd = py;
+   py->bark(); // I am a yellow dog.
+   pd->bark(); // I am just a dog. WRONG polymorphism. calls Yellowdog bark() BUT gets the default value from Dog NOT from Yellodog
+
+   py->run(45); // ERROR. It don't call Dog's run(), it call yellowdog run() BUT arg mismatch
+   py->run(45); // OK. If you declare 'using Dog::run;' I am run at speed of 45
+   py->run();   // I cann't run
+}
+
+/* 
+ * Summary of pitfalls:
+ * 1. Precise definition of classes;
+ * 2. Don't override non-virtual functions;
+ * 3. Don't override default parameter values for virtual functions;
+ * 4. Force inheritance of shadowed functions.
+ * 5. Be careful of typo in function overriding.
+ */
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: https://www.youtube.com/watch?v=EYuPBkgJtCQ&list=PLE28375D4AC946CC3&index=18
