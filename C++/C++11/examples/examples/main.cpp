@@ -1,11 +1,6 @@
 #if 1
 
 
-
-
-
-
-
 #else
 /* $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
 // Ref:
@@ -19,6 +14,1253 @@ int main()
 
 	return 0;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Non-modifying Algorithms -  count, min and max, compare, linear search, attribute 
+
+// STL Algorithms #1: Non-modifying Algorithms
+// https://www.youtube.com/watch?v=eV7tVdNIw9o&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=8
+
+vector<int> vec = {9,60,90,8,45,87,90,69,69,55,7};
+vector<int> vec2 = {9,60,70,8,45,87};
+vector<int>::iterator itr, itr2;
+pair<vector<int>::iterator, vector<int>::iterator> pair_of_itr;
+
+// 1. Counting
+//     Algorithm   Data              Operation
+int n = count(vec.begin()+2, vec.end()-1, 69);// 2 in the range (90 to 55 inclusive).Default comparison used is =
+int m = count_if(vec.begin(), vec.end(), [](int x){return x==69;}); // 2 
+int m = count_if(vec.begin(), vec.end(), [](int x){return x<10;}); // 3  - C++ 11 Lambda Function
+
+// Lamda function in Normal function form
+bool lessThan10(int x) {  return x<10; }
+
+// 2.  Min and Max
+itr = max_element(vec.begin()+2, vec.end());  // 90 - first max value. Default comparison used is <
+// It returns the first max value in the least significant position
+itr = max_element(vec.begin(), vec.end(), [](int x, int y){ return (x%10)<(y%10);}); // 9
+// Most algorithms have a simple form and a generalized form
+
+itr = min_element(vec.begin(), vec.end());  // 7 - first min value.
+// Also has generalized form: min_element()
+
+pair_of_itr = minmax_element(vec.begin(), vec.end(),  // {60, 69} 
+		                      [](int x, int y){ return (x%10)<(y%10);}); 
+// returns a pair, which contains FIRST of min and LAST of max (not FIRST of max)
+
+// 3. Linear Searching (used when data is not sorted)
+//    Returns the first match
+itr = find(vec.begin(), vec.end(), 55);
+itr = find_if(vec.begin(), vec.end(), [](int x){ return x>80; });
+itr = find_if_not(vec.begin(), vec.end(), [](int x){ return x>80; });
+
+itr = search_n(vec.begin(), vec.end(), 2, 69);  // Consecutive 2 items of 69
+// Generalized form: search_n()
+
+// Search subrange
+vector<int> sub = {45, 87, 90};
+itr = search( vec.begin(), vec.end(), sub.begin(), sub.end()); // search FIRST subrange
+itr = find_end( vec.begin(), vec.end(), sub.begin(), sub.end()); // search LAST subrange
+// Generalized form: search(), find_end()
+
+// Search any_of
+vector<int> items  = {87, 69};
+itr = find_first_of(vec.begin(), vec.end(), items.begin(), items.end()); 
+      // Search any one of the item in items
+itr = find_first_of(vec.begin(), vec.end(), items.begin(), items.end(),
+		              [](int x, int y) { return x == y*4;}); 
+      // Search any one of the item in items that satisfy: x==y*4;
+
+// Search Adjacent
+itr = adjacent_find(vec.begin(), vec.end());  // find two adjacent items that are same
+itr = adjacent_find(vec.begin(), vec.end(), [](int x, int y){ return x==y*4;}); 
+	     // find two adjacent items that satisfy: x==y*4;
+
+
+// 4. Comparing Ranges
+if (equal(vec.begin(), vec.end(), vec2.begin())) {
+  cout << "vec and vec2 are same.\n";
+}
+
+if (is_permutation(vec.begin(), vec.end(), vec2.begin())) {
+	cout << "vec and vec2 have same items, but in differenct order.\n";	
+}
+
+pair_of_itr = mismatch(vec.begin(), vec.end(), vec2.begin());
+// find first difference
+// pair_of_itr.first is an iterator of vec 
+// pair_of_itr.second is an iterator of vec2
+
+//Lexicographical Comparison: one-by-one comparison with "less than"
+lexicographical_compare(vec.begin(), vec.end(), vec2.begin(), vec2.end());
+// {1,2,3,5} < {1,2,4,5}
+// {1,2}     < {1,2,3}
+
+// Generalized forms: 
+//   equal(), is_permutation(), mismatch(), lexicographical_compare()
+
+
+// 5. Check Attributes
+is_sorted(vec.begin(), vec.end());  // Check if vec is sorted
+
+itr = is_sorted_until(vec.begin(), vec.end()); 
+// itr points to first place to where elements are no longer sorted
+// Generalized forms: is_sorted(), is_sorted_until()
+
+is_partitioned(vec.begin(), vec.end(), [](int x){return x>80;} );
+			// Check if vec is partitioned according to the condition of (x>80)
+
+is_heap(vec.begin(), vec.end());  // Check if vec is a heap
+itr = is_heap_until(vec.begin(), vec.end());  // find the first place where it is no longer a heap
+// Generalized forms: is_heap(), is_heap_until()
+
+// All, any, none
+all_of(vec.begin(), vec.end(), [](int x) {return x>80} );  
+// If all of vec is bigger than 80 
+
+any_of(vec.begin(), vec.end(), [](int x) {return x>80} );  
+// If any of vec is bigger than 80 
+
+none_of(vec.begin(), vec.end(), [](int x) {return x>80} );  
+// If none of vec is bigger than 80 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Modifying Algorithms(Changes the element values) - copy, move, transform, swap, fill, replace, remove
+ 
+// Ref: STL Algorithm #2: Modifying Algorithms
+// https://www.youtube.com/watch?v=kYYm-Quj97o&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=9
+vector<int> vec = {9,60,70,8,45,87,90};     // 7 items
+vector<int> vec2 = {0,0,0,0,0,0,0,0,0,0,0}; // 11 items
+vector<int>::iterator itr, itr2;
+pair<vector<int>::iterator, vector<int>::iterator> pair_of_itr;
+
+
+// 1. Copy
+copy(vec.begin(), vec.end(), // Source
+	  vec2.begin());          // Destination
+
+copy_if(vec.begin(), vec.end(),      // Source
+		  vec2.begin(),                // Destination
+		  [](int x){ return x>80;});   // Condition 
+// vec2: {87, 90, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+copy_n(vec.begin(),  4, vec2.begin());  
+// vec2: {9, 60, 70, 8, 0, 0, 0, 0, 0, 0, 0}
+
+copy_backward(vec.begin(),  vec.end(),  // Source
+		        vec2.end());              // Destination end() NOT begin()
+// vec2: {0, 0, 0, 0, 9, 60, 70, 8, 45, 87, 90}
+
+
+// 2. Move 
+vector<string> vec = {"apple", "orange", "pear", "grape"}; // 4 items
+vector<string> vec2 = {"", "", "", "", "", ""};            // 6 items
+
+move(vec.begin(), vec.end(), vec2.begin());
+// vec:  {"", "", "", ""}  // Undefined
+// vec2: {"apple", "orange", "pear", "grape", "", ""};
+//
+// If move semantics are defined for the element type(string in this case), elements are MOVED over, 
+// otherwise they are COPIED over with copy constructor, just like copy().
+
+move_backward(vec.begin(), vec.end(), vec2.end());
+// vec2: {"", "", "apple", "orange", "pear", "grape"};
+
+
+vector<int> vec = {9,60,70,8,45,87,90};     // 7 items
+vector<int> vec2 = {9,60,70,8,45,87,90};     // 7 items
+vector<int> vec3 = {0,0,0,0,0,0,0,0,0,0,0}; // 11 items
+
+// 3. Transform
+transform(vec.begin(), vec.end(),    // Source
+		    vec3.begin(),              // Destination
+			 [](int x){ return x-1;});  // Operation 
+
+transform(vec.begin(), vec.end(),           // Source #1
+          vec2.begin(),                     // Source #2 (second input)
+		    vec3.begin(),                     // Destination
+  	       [](int x, int y){ return x+y;});  // Operation
+         // Add items from vec and vec2 and save in vec3 
+         // vec3[0] = vec[0] + vec2[0]
+         // vec3[1] = vec[1] + vec2[1]
+         // ...
+
+// 4. Swap - two way copying
+swap_ranges(vec.begin(), vec.end(), vec2.begin());
+
+// 5. Fill
+vector<int> vec = {0, 0, 0, 0, 0};
+
+fill(vec.begin(), vec.end(), 9); // vec: {9, 9, 9, 9, 9}
+
+fill_n(vec.begin(), 3, 9);       // vec: {9, 9, 9, 0, 0}
+
+generate(vec.begin(), vec.end(), rand); // filled by the content generated by function rand.
+
+generate_n(vec.begin(), 3, rand);
+
+// 6. Replace
+replace(vec.begin(), vec.end(),  // Data Range
+		  6,                       // Old value condition
+		  9);                      // new value                    
+
+replace_if(vec.begin(), vec.end(),     // Data Range
+			  [](int x){return x>80;},    // Old value condition
+			  9);                         // new value                    
+
+replace_copy(vec.begin(), vec.end(),  // Source
+			  vec2.begin(),              // Destination
+			  6,                         // Old value condition
+			  9);                        // new value                    
+  // Generalized form: replace_copy_if()
+
+
+// 7. Remove
+remove(vec.begin(), vec.end(), 3);   // Remove all 3's
+remove_if(vec.begin(), vec.end(), [](int x){return x>80;});  
+	 // Remove items bigger than 80
+
+remove_copy(vec.begin(), vec.end(),  // Source
+		      vec2.begin(),            // Destination (SAVE it)
+				6);                      // Condition 
+   // Remove all 6's, and copy the remain items to vec2
+   // Generalized form: remove_copy_if()
+
+unique(vec.begin(), vec.end());   // Remove consecutive equal elements
+
+unique(vec.begin(), vec.end(), less<int>());   
+        // Remove elements whose previous element is less than itself
+
+unique_copy(vec.begin(), vec.end(), vec2.begin());   
+// Remove consecutive equal elements, and then copy the uniquified items to vec2
+// Generalized form: unique_copy()
+
+
+Order-Changing Algorithms: reverse, rotate, permute, shuffle 
+They changes the order of elements in container, but not necessarily the elements themselves.
+
+
+vector<int> vec =  {9,60,70,8,45,87,90};     // 7 items
+vector<int> vec2 = {0,0,0,0,0,0,0};     // 7 items
+
+// 1. Reverse
+reverse(vec.begin()+1, vec.end()-1);
+// vec: {9,87,45,8,70,60,90};     // 7 items
+
+reverse_copy(vec.begin()+1, vec.end()-1, vec2.begin());
+// vec2: {87,45,8,70,60,0,0};
+
+
+
+// 2. Rotate
+rotate(vec.begin(), vec.begin()+3, vec.end());
+// vec: {8,45,87,90,9,60,70};     // 7 items
+
+rotate_copy(vec.begin(), vec.begin()+3, vec.end(),  // Source
+		 vec2.begin());                               // Destination
+       // Copy vec to vec2 in rotated order
+       // vec is unchanged
+
+
+// 3. Permute
+next_permutation(vec.begin(), vec.end()); //Lexicographically next greater permutation
+prev_permutation(vec.begin(), vec.end()); //Lexicographically next smaller permutation
+
+// {1,2,3,5} < {1,2,4,4}
+// {1,2}     < {1,2,3}
+
+// Sorted in ascending order:  {8, 9, 45, 60, 70, 87, 90} - Lexicographically smallest
+// Sorted in descending order: {90, 87, 70, 60, 45, 9, 8} - Lexicographically greatest
+
+// Generalized form: next_permutation(), prev_permutation()
+
+// 4. Shuffle  
+//    - Rearrange the elements randomly 
+//      (swap each element with a randomly selected element)
+random_shuffle(vec.begin(), vec.end());
+random_shuffle(vec.begin(), vec.end(), rand);
+
+// C++ 11
+shuffle(vec.begin(), vec.end(), default_random_engine()); // Better random number generation
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+ * Sortings in STL
+ */
+
+// Sorting algorithm requires random access iterators:
+//    vector, deque, container array, native array
+
+// Ref:STL Algorithms #3: Sorting
+// https://www.youtube.com/watch?v=TZv5qHU2AMQ&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=10
+
+vector<int> vec = {9,1,10,2,45,3,90,4,9,5,8};
+
+sort(vec.begin(), vec.end());  // sort with operator <
+// vec:  1 2 3 4 5 8 9 9 10 45 90
+
+bool lsb_less(int x, int y) {
+      return (x%10)<(y%10);
+}	
+sort(vec.begin(), vec.end(), lsb_less);  // sort with lsb_less()
+// vec: 10 90 1 2 3 4 45 5 8 9 9
+
+
+// Sometime we don't need complete sorting.
+// Problem #1: Finding top 5 students according to their test scores.
+//  -  partial sort
+vector<int> vec = {9,60,70,8,45,87,90,69,69,55,7};
+
+partial_sort(vec.begin(), vec.begin()+5, vec.end(), greater<int>()); // greater<int> is functor
+// vec: 90 87 70 69 69 8 9 45 60 55 7
+
+// Overloaded:
+partial_sort(vec.begin(), vec.begin()+5, vec.end()); // Bottom 5 students
+// vec: 7 8 9 45 55 90 60 87 70 69 69
+
+
+// Problem #2: Finding top 5 students according to their score, but I don't care about who is best among 5(Not sorted).
+vector<int> vec = {9,60,70,8,45,87,90,69,69,55,7};
+
+nth_element(vec.begin(), vec.begin()+5, vec.end(), greater<int>());
+// vec: 69 87 70 90 69 60 55 45 9 8 7
+
+
+// Problem #3: Move the students whose score is less than 10 to the front
+vector<int> vec = {9,60,70,8,45,87,90,69,69,55,7};
+
+bool lessThan10(int i) { return (i<10); }
+partition(vec.begin(),  vec.end(), lessThan10);
+// vec: 8 7 9 90 69 60 55 45 70 87 69 -> converts to 2 groups of unsorted elements
+
+// To preserve the original order within each partition:
+stable_partition(vec.begin(),  vec.end(), lessThan10);
+// vec: 9 8 7 60 70 45 87 90 69 69 55
+
+
+
+// Heap Algorithms
+//
+// Heap Properties:
+// 1. First element is always the largest just like a priority Queue.
+// 2. Add/remove takes O(log(n)) time
+vector<int> vec = {9,1,10,2,45,3,90,4,9,5,8};
+
+make_heap(vec.begin(), vec.end());
+// vec: 90 45 10 9 8 3 9 4 2 5 1
+
+
+Problem: Remove the largest element:
+pop_heap(vec.begin(), vec.end());  // 1. Swap vec[0] with last item vec[size-1]. 90 to 1
+                                   // 2. Heapify [vec.begin(), vec.end()-1)
+// vec:  45 9 10 4 8 3 9 1 2 5 90
+vec.pop_back();  // Remove the last item (the largest one). 90
+// vec:  45 9 10 4 8 3 9 1 2 5
+
+// Add a new element:
+vec.push_back(100);
+push_heap(vec.begin(), vec.end());  // Heapify the last item in vec
+// vec:  100 45 10 4 9 3 9 1 2 5 8
+
+
+
+
+// Heap Sorting:
+vector<int> vec = {9,1,10,2,45,3,90,4,9,5,8};
+make_heap(vec.begin(), vec.end());
+
+sort_heap(vec.begin(), vec.end());
+// vec: 1 2 3 4 5 8 9 9 10 45 100
+// Note: sort_heap can only work on a heap.
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+Sorted Data Algorithms
+   - Algorithms that require data being pre-sorted
+   - Binary search, merge, set operations
+Note: Every sorted data algorithm has a generalized form with a same name.
+ */
+
+// Ref: STL Algorithms #4: Sorted Data Algorithms and Numeric Algorithms
+// https://www.youtube.com/watch?v=s6_meQVkwgc&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=11
+
+vector<int> vec = {8,9,9,9,45,87,90};     // 7 items
+
+
+// Search ELEMENTS
+bool found = binary_search(vec.begin(), vec.end(), 9);  // check if 9 is in vec
+
+vector<int> s = {9, 45, 66};
+bool found = includes(vec.begin(), vec.end(),       // Range #1
+		                s.begin(), s.end());        // Range #2 - Search multiple elements
+// Return true if all elements of s is included in vec
+// Both vec and s must be sorted
+
+// Search POSITION/ITERATOR
+itr = lower_bound(vec.begin(), vec.end(), 9);  // returns iterator pointing to vec[1] which is 9.  
+// Find the first position(lower index) where 9 could be inserted and still keep the sorting.
+
+itr = upper_bound(vec.begin(), vec.end(), 9);  // vec[4] 
+// Find the last position(upper index) where 9 could be inserted and still keep the sorting.
+
+pair_of_itr = equal_range(vec.begin(), vec.end(), 9); 
+// Returns both first and last position where 9 could be inserted and still keep the sorting.
+
+// 2. Merge
+vector<int> vec = {8,9,9,10}; 
+vector<int> vec2 = {7,9,10}; 
+merge(vec.begin(), vec.end(),      // Input Range #1
+		vec2.begin(), vec2.end(),    // input Range #2
+		vec_out.begin());               // Output 
+      // Both vec and vec2 should be sorted 
+      // Nothing is dropped, all duplicates are kept. (In set_union, duplicates dropped)
+// vec_out: {7,8,9,9,9,10,10}
+
+vector<int> vec = {1,2,3,4,1,2,3,4,5}  // Merging two parts of same sorted series
+inplace_merge(vec.begin(), vec.begin()+4, vec.end());  
+// vec: {1,1,2,2,3,3,4,4,5}  - One step of merge sort
+
+
+// 3. Set operations
+//    - Both vec and vec3 should be sorted 
+//    - The resulted data is also sorted
+vector<int> vec = {8,9,9,10}; 
+vector<int> vec2 = {7,9,10}; 
+vector<int> vec_out[5];
+
+set_union(vec.begin(), vec.end(),      // Input Range #1
+		    vec2.begin(), vec2.end(),    // input Range #2
+		    vec_out.begin());               // Output 
+// if X is in both vec and vec2, only one X is kept in vec_out (In merge, duplicates CANN'T dropped)
+// vec_out: {7,8,9,9,10}
+
+set_intersection(vec.begin(), vec.end(),      // Input Range #1
+		           vec2.begin(), vec2.end(),    // input Range #2
+		           vec_out.begin());               // Output 
+// Only the items that are in both vec and vec2 are saved in vec_out
+// vec_out: {9,10,0,0,0}
+
+
+vector<int> vec = {8,9,9,10}; 
+vector<int> vec2 = {7,9,10}; 
+vector<int> vec_out[5]; 
+set_difference(vec.begin(), vec.end(),      // Input Range #1
+		         vec2.begin(), vec2.end(),    // input Range #2
+		         vec_out.begin());               // Output 
+// Only the items that are in vec but not in vec2 are saved in vec_out
+// vec_out: {8,9,0,0,0}
+
+set_symmetric_difference(vec.begin(), vec.end(),      // Input Range #1
+		         vec2.begin(), vec2.end(),       // input Range #2
+		         vec_out.begin());               // Output 
+// vec_out has items from either vec or vec2, but not from both
+// vec_out: {7,8,9,0,0}
+
+
+
+
+
+
+/*
+ *  Numeric Algorithms (in <numeric> NOT in <algorithm>)
+ *   - Accumulate, inner product, partial sum, adjacent difference
+ */
+
+// 1. Accumulate
+int x = accumulate(vec.begin(), vec.end(), 10); 
+// 10 + vec[0] + vec[1] + vec[2] + ...
+
+int x = accumulate(vec.begin(), vec.end(), 10, multiplies<int>()); // Generalized form
+// 10 * vec[0] * vec[1] * vec[2] * ...
+
+
+// 2. Inner Product
+//vector<int> vec = {9,60,70,8,45,87,90};     // 7 items
+int x = inner_product(vec.begin(), vec.begin()+3,  // Range #1
+		               vec.end()-3,                 // Range #2
+				         10);                         // Init Value
+// 10 + vec[0]*vec[4] + vec[2]*vec[5] + vec[3]*vec[6]
+		
+int x = inner_product(vec.begin(), vec.begin()+3,  // Range #1 [9,60,70]
+		                vec.end()-3,                 // Range #2 [45,87,90]
+				          10,                          // Init Value
+				          multiplies<int>(),
+				          plus<int>());
+// 10 * (vec[0]+vec[4]) * (vec[2]+vec[5]) * (vec[3]+vec[6])
+
+
+
+// 3. Partial Sum
+partial_sum(vec.begin(), vec.end(), vec2.begin());
+// vec2[0] = vec[0]
+// vec2[1] = vec[0] + vec[1];
+// vec2[2] = vec[0] + vec[1] + vec[2]; 
+// vec2[3] = vec[0] + vec[1] + vec[2] + vec[3]; 
+// ...
+
+partial_sum(vec.begin(), vec.end(), vec2.begin(), multiplies<int>());
+// vec2[0] = vec[0]
+// vec2[1] = vec[0] * vec[1];
+// vec2[2] = vec[0] * vec[1] * vec[2]; 
+// vec2[3] = vec[0] * vec[1] * vec[2] * vec[3]; 
+// ...
+
+
+// 4. Adjacent Difference
+adjacent_difference(vec.begin(), vec.end(), vec2.begin());
+// vec2[0] = vec[0]
+// vec2[1] = vec[1] - vec[0];
+// vec2[2] = vec[2] - vec[1]; 
+// vec2[3] = vec[3] - vec[2]; 
+// ...
+
+adjacent_difference(vec.begin(), vec.end(), vec2.begin(), plus<int>());
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Ref: Learn STL: Introduction of Templates
+// https://www.youtube.com/watch?v=Vc1RyqWFbiA&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=1
+
+// Function Template
+template<typename T>
+T square(T x) {
+	return x*x;
+}
+
+int main() {
+	cout << square(5) << endl; // int - detect the data type by it's parameter
+	cout << square(5.1) << endl; // double (NOT float)- detect the data type by it's parameter
+	// Specifying the data type is OPTIONAL in Functional template
+	cout << square<int>(5) << endl; // square function of data type int
+	cout << square<float>(5.1) << endl; // square function of data type float
+}
+
+
+// Class Template
+template<typename T>
+class BoVector {
+	T arr[1000];
+	int size;
+public:
+	BoVector() :size(0) {}
+	void push(T x) { arr[size] = x; size++; }
+	T get(int i) const { return arr[i]; }
+	int getSize() const { return size; }
+	void print() const {for(int i=0; i<size; i++) {cout << arr[i] << endl;}}
+};
+
+template<typename T>
+BoVector<T> operator*(const BoVector<T>& rhs1, BoVector<T>& rhs2) {
+	BoVector<T> ret;
+	for (int i = 0; i<rhs1.getSize(); i++) {
+		ret.push(rhs1.get(i)*rhs2.get(i));
+	}
+	return ret;
+}
+
+int main()
+{
+	// Specifying the data type is MUST in Class template
+	BoVector<int> bv;
+	bv.push(2);
+	bv.push(5);
+	bv.push(8);
+	bv.push(9);
+	bv.print();
+
+	cout << "Print squared bv: " << endl;
+	bv = square(bv);
+	bv.print();
+}
+
+Disadvantage of template:
+ 1. Code bloat - creates varies copies of function with different datatype as per the function usage in compile time.
+    It will increase the size of the program image.
+
+
+// STL: Standard Template Library -- Data Structures and Algorithms
+
+// Ref: Introduction of STL #1: Overview
+// https://www.youtube.com/watch?v=ltBdTiRgSaw&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=2
+
+// First Example:
+using namespace std;
+
+vector<int> vec;
+vec.push_back(4); vec.push_back(1); vec.push_back(8);  // vec: {4, 1, 8}
+
+// half-open: [begin, end) - begin points to first element, end - points to an element after the end element.
+vector<int>::iterator itr1 = vec.begin();  
+vector<int>::iterator itr2 = vec.end();
+// Iterator behave just like a POINTER but it is a CLASS
+for (vector<int>::iterator itr = itr1; itr!=itr2; ++itr)
+   cout << *itr << " ";  // Print out:  4 1 8
+
+sort(itr1, itr2);  // vec: {1, 4, 8}
+
+
+/*
+ 	 Reasons to use C++ standard library:
+ 	 1. Code reuse, no need to re-invent the wheel.
+ 	 2. Efficiency (fast and use less resources). Modern C++ compiler are usually tuned to optimize for C++ standard library code.
+ 	 3. Accurate, less buggy.
+ 	 4. Terse, readable code; reduced control flow.
+ 	 5. Standardization, guarenteed availability
+ 	 6. A role model of writing library.
+ 	 7. Good knowledge of data structures and algorithms.
+ */
+
+// Ref: Introduction of STL #2: Sequence Containers
+// https://www.youtube.com/watch?v=gxZJ5JNuWMY&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=3
+Containers:
+
+1. Sequence Containers (Array and Linked List):
+	- vector, deque, list, forward list, array
+2. Associative Containers (Binary Tree -  Always SORTED):
+	- set, multiset
+	- map, multimap
+3. Unordered Containers(Hash table):
+	- Unordered set / multiset
+	- Unordered map / multimap
+
+// Ref: Introduction of STL #2: Sequence Containers
+// https://www.youtube.com/watch?v=gxZJ5JNuWMY&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=3
+// STL Headers
+// Sequence Containers (Array and Linked List)
+#include <vector>
+#include <deque>
+#include <list>
+// Associative Containers (Binary Tree -  Always SORTED)
+#include <set>   // set and multiset
+#include <map>   // map and multimap
+// Unordered Containers (Hash table)
+#include <unordered_set>  // unordered set/multiset
+#include <unordered_map>  // unordered map/multimap
+#include <iterator>
+#include <algorithm> // includues most of the alogorithms
+#include <numeric>    // some numeric algorithms
+#include <functional> // functor
+
+
+// Sequence Container  -  Vector
+vector<int> vec;   // vec.size() == 0
+vec.push_back(4); vec.push_back(1); vec.push_back(8);  // vec: {4, 1, 8};    vec.size() == 3
+
+// Random Access - Vector specific operations:
+cout << vec[2];     // 8  (no range check)
+cout << vec.at(2);  // 8  (throw range_error exception of out of range)
+
+for (int i; i < vec.size(); i++)  cout << vec[i] << " ";
+
+for (vector<int>::iterator itr = vec.begin(); itr!= vec.end(); ++itr)
+   cout << *itr << " ";  
+
+for (it: vec)    // C++ 11
+   cout << it << " ";
+
+// Vector is a dynamically allocated contiguous array in memory
+int* p = &vec[0];   p[2] = 6;
+
+
+// Common member functions of ALL containers.
+// vec: {4, 1, 8}
+if (vec.empty()) { cout << " Vector is Empty.\n"; }
+cout << vec.size();   // 3
+vector<int> vec2(vec);  // Copy constructor, vec2: {4, 1, 8}
+vec.clear();    // Remove all items in vec;   vec.size() == 0
+vec2.swap(vec);   // vec2 becomes EMPTY, and vec has 3 items.
+
+/* 
+ 	 Properties of Vector:
+ 	 1. FAST insert/remove at the END: O(1)
+ 	 2. SLOW insert/remove at the BEGINING or in the MIDDLE: O(n)
+ 	 3. SLOW search: O(n)
+ */
+
+// Deque
+deque<int> deq = { 4, 6, 7 };
+deq.push_front(2);  // deq: {2, 4, 6, 7}
+deq.push_back(3);   // deq: {2, 4, 6, 7, 3}
+
+// Deque has similar interface like vector
+cout << deq[1];  // 4
+
+
+/* 
+	 Properties:
+	 1. FAST insert/remove at the BEGINING and the END;
+	 2. SLOW insert/remove in the middle: O(n)
+	 3. SLOW search: O(n)
+ */
+
+
+// list  -- double linked list
+list<int> mylist = {5, 2, 9 }; 
+mylist.push_back(6);  // mylist: { 5, 2, 9, 6}
+mylist.push_front(4); // mylist: { 4, 5, 2, 9, 6}
+
+list<int>::iterator itr = find(mylist.begin(), mylist.end(), 2); // itr -> 2
+mylist.insert(itr, 8);   // mylist: {4, 5, 8, 2, 9, 6}  
+                         // O(1), faster than vector/deque
+itr++;                   // itr -> 9
+mylist.erase(itr);       // mylist: {4, 8, 5, 2, 6}   O(1)
+
+
+/* 
+	Properties:
+	1. fast insert/remove at any place: O(1)
+	2. slow search: O(n)
+	3. no random access, no [] operator.
+ */
+
+
+// Array Container: Thin wrapper on top of the native array. Bcos of this you can use the STL function(begin, end, swap) on arrays.
+int a[3] = {3, 4, 5};
+array<int, 3> a = {3, 4, 5}; // Size CANNOT be changed at later stage
+array<int, 4> b = {3, 4, 5}; // a & b are considered as different TYPES bcos of its different size value
+a.begin();
+a.end();
+a.size();
+a.swap();
+
+
+// Ref: Introduction of STL #3: Associative Containers
+// https://www.youtube.com/watch?v=6iyzPed7FrM&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=4
+ Associative Container : Always sorted, default criteria is < *
+         No push_back(), push_front()
+
+
+
+
+
+
+
+
+
+
+
+ // set - No duplicates
+  set<int> myset;
+  myset.insert(3);    // myset: {3}
+  myset.insert(1);    // myset: {1, 3}
+  myset.insert(7);    // myset: {1, 3, 7},  O(log(n))
+
+  set<int>::iterator it;
+  it = myset.find(7);  // O(log(n)), it points to 7
+                  // Sequence containers don't even have find() member function
+  pair<set<int>::iterator, bool> ret;
+  ret = myset.insert(3);  // no new element inserted bcos it is duplicate
+  if (ret.second==false) 
+     it=ret.first;       // "it" now points to element 3
+  // Eventhough "it" is at element 3 it wouldn't insert '9' before '3' - You cann't decide it!
+  myset.insert(it, 9);  // myset:  {1, 3, 7, 9}. Here "it" is a hint for doing things faster possibily  O(log(n)) => O(1)
+                         // it still points to 3
+  myset.erase(it);         // myset:  {1, 7, 9}
+
+  myset.erase(7);   // myset:  {1, 9}
+  // Note: NONE of the sequence containers provide this kind of erase.
+
+
+
+// multiset is a set that allows duplicated items(INSERTION ALWAYS PASS)
+multiset<int> myset;
+
+// set/multiset: value of the elements CANNOT be modified [READ ONLY] to maintain th sorted order
+*it = 10;  // Error - *it is read-only
+
+
+/* 
+	 Properties:
+	 1. Fast search: O(log(n))
+	 2. Traversing is slow (compared to vector & deque)
+	 3. No random access, no [] operator.
+ */
+
+
+/*
+  map - No duplicated key
+  In set/multiset - value is sorted. map/multimap - key is sorted
+ */
+map<char,int> mymap;
+mymap.insert ( pair<char,int>('a',100) );
+mymap.insert ( make_pair('z',200) ); // TYPES infered from the parameters
+
+map<char,int>::iterator it = mymap.begin();
+mymap.insert(it, pair<char,int>('b',300));  // "it" is a hint for doing things faster
+
+it = mymap.find('z');  // O(log(n))
+
+// showing contents:
+for ( it=mymap.begin() ; it != mymap.end(); it++ )
+  cout << (*it).first << " => " << (*it).second << endl;
+
+// multimap is a map that allows duplicated keys
+multimap<char,int> mymap;
+
+// map/multimap: 
+//  -- keys cannot be modified
+//     type of *it:   pair<const char, int>
+     (*it).first = 'd';  // Error - READ ONLY
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Ref: Introduction of STL #4: Unordered Containers
+// https://www.youtube.com/watch?v=NNLvY9O7ufU&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=5
+
+/*
+   Unordered Container (C++ 11)
+    - Unordered set and multiset
+    - Unordered map and multimap
+    Order not defined, and may change overtime
+ 
+   Default hash function defined for fundamental types and string.
+ 
+   No subscript operator[] or at()
+   No push_back(), push_front()
+ */
+
+// unordered set
+  unordered_set<string> myset = { "red","green","blue" };
+  unordered_set<string>::const_iterator itr = myset.find ("green"); // O(1)
+  if (itr != myset.end())   // Not found - returns iterator end()
+     cout << *itr << endl;
+  myset.insert("yellow");  // O(1)
+
+  vector<string> vec = {"purple", "pink"};
+  myset.insert(vec.begin(), vec.end());
+
+// Hash table specific APIs:
+  cout << "load_factor = " << myset.load_factor() << endl;// total no.element / total no.buckets
+  string x = "red";
+  cout << x << " is in bucket #" << myset.bucket(x) << endl; // which bucket has the element ?
+  cout << "Total bucket #" << myset.bucket_count() << endl;
+
+// unordered multiset: unordered set that allows duplicated elements
+// unordered map: unordered set of pairs
+// unordered multimap: unordered map that allows duplicated keys
+// hash collision (many items in the same bucket) => performance degrade in search
+
+
+
+
+
+/* Properties of Unordered Containers:
+ * 1. Fastest search/insert at any place: O(1)
+ *     Associative Container takes O(log(n))
+ *     vector, deque takes O(n)
+ *     list takes O(1) to insert, O(n) to search
+ * 2. Unorderd set/multiset: element value cannot be changed.
+ *    Unorderd map/multimap: element key cannot be changed.
+ */
+
+
+
+// Associative Array -  map and unordered map
+unordered_map<char, string> day = {{'S',"Sunday"}, {'M',"Monday"}};
+
+cout << day['S'] << endl;    // No range check
+cout << day.at('S') << endl; // Has range check
+
+vector<int> vec = {1, 2, 3};
+vec[5] = 9;   // Compile Error - There is NO location 5
+
+// BUT works for Associative Array
+day['W'] = "Wednesday";  // Inserting {'W', "Wednesday}
+day.insert(make_pair('F', "Friday"));  // Inserting {'F', "Friday"}
+
+// insert - cann't change the existing one
+day.insert(make_pair('M', "MONDAY"));  // Fail to modify, it's an unordered_map
+// subscript gives WRITE access so you CAN change the existing one
+day['M'] = "MONDAY";                   // Succeed to modify
+
+
+
+void foo(const unordered_map<char, string>& m) {
+   // Problem:
+   m['S'] = "SUNDAY";       // Error bcos const input param
+   cout << m['S'] << endl; // Error - eventhough we are not modifying compiler DONN'T allow any subscript 
+   // Solution:
+   auto itr = m.find('S');
+   if (itr != m.end()) cout << *itr << endl; // OK
+}
+foo(day);
+
+//Notes about Associative Array: 
+//1. Search time: unordered_map - O(1) NOT always; map - O(log(n)) always;
+//2. Unordered_map may degrade to O(n);
+//3. Can't use multimap and unordered_multimap, they don't have [] operator.
+
+
+/*
+ * Container Adaptor
+ *  - Provide a restricted interface to meet special needs
+ *  - Implemented with fundamental container classes
+ *
+ *  1. stack:  LIFO, push(), pop(), top()
+ *
+ *  2. queue:  FIFO, push(), pop(), front(), back() 
+ *
+ *  3. priority queue: first item always has the greatest priority
+ *                   push(), pop(), top()
+ */
+
+/*
+ * Another way of categorizing containers:
+ *
+ * 1. Array based containers: vector, deque
+ *
+ * 2. Node base containers: list + associative containers + unordered containers
+ * 
+ * Node base containers DONN'T invalidtes pointer (after insert and other operations)
+ *
+ * Array based containers invalidates pointers (after insert and other operations):
+ *    - Native pointers, iterators, references
+ */
+
+ vector<int> vec = {1,2,3,4};
+ int* p = &vec[2];   // p points to 3
+ vec.insert(vec.begin(), 0);
+ cout << *p << endl;   // 2, or random value - Don't use pointer
+
+
+
+
+
+// Ref: Introduction of STL #5: Iterators and Algorithms
+// https://www.youtube.com/watch?v=vO2AlrBf5rQ&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=6
+
+/*
+ * Iterators - 5 Types
+ */
+// 1. Random Access Iterator:  vector, deque, array
+vector<int> itr;
+itr = itr + 5;  // Addition: advance itr by 5
+itr = itr - 4;  // Subtraction
+if (itr2 > itr1) // Comparision
+++itr;   // faster than itr++. Bcos pre-increment NO need to return any values
+--itr;
+
+// 2. Bidirectional Iterator: list, set/multiset, map/multimap
+list<int> itr;
+++itr; // Can do increment But you CANN'T do addition, subtraction and comparision like vector
+--itr;
+
+// 3. Forward Iterator: forward_list
+forward_list<int> itr;
+++itr; // Can do ONLY increment and CANN'T be decremented
+
+// Unordered containers provide "at least" forward iterators.
+
+// 4. Input Iterator: read and process values while iterating forward.
+int x = *itr; // READ ONLY. CANN'T WRITE
+
+// 5. Output Iterator: output values while iterating forward.
+*itr = 100; // WRITE ONLY. CANN'T READ
+
+
+
+
+
+// Every container has a iterator and a const_iterator
+set<int>::iterator itr;
+set<int>::const_iterator citr;  // Read_only access to container elements
+
+set<int> myset = {2,4,5,1,9};
+for (citr = myset.begin(); citr != myset.end(); ++citr) {
+   cout << *citr << endl;
+   //*citr = 3; // Error
+}
+
+// In C++ 11 - All containers supports additional buildin const iterator - cbegin & cend
+for_each(myset.cbegin(), myset.cend(), MyFunction);  // Only in C++ 11
+
+
+
+// Iterator Functions:
+advance(itr, 5);       // Move itr forward 5 spots.Applicable all containers. Equivalent to itr += 5 if it is a random access iterator;
+distance(itr1, itr2);  // Measure the distance between itr1 and itr2. Useful for non-random access iterator.
+
+
+
+
+/* Iterator Adaptor (Predefined Iterator)
+ *  - A special, more powerful iterator
+ * 1. Insert iterator
+ * 2. Stream iterator
+ * 3. Reverse iterator
+ * 4. Move iterator (C++ 11)
+ */
+
+
+
+
+// 1. Insert Iterator:
+vector<int> vec1 = {4,5};
+vector<int> vec2 = {12, 14, 16, 18};
+vector<int>::iterator it = find(vec2.begin(), vec2.end(), 16);
+insert_iterator< vector<int> > i_itr(vec2,it);
+copy(vec1.begin(),vec1.end(),  // source
+     i_itr);                   // destination
+     //vec2: {12, 14, 4, 5, 16, 18}
+// Other insert iterators: back_insert_iterator, front_insert_iterator
+
+
+// 2. Stream Iterator:
+vector<string> vec4;
+copy(istream_iterator<string>(cin),      // standard input stream
+            istream_iterator<string>(),  // end of the stream
+            back_inserter(vec4)); // all stream copied to vec4
+
+copy(vec4.begin(), vec4.end(), ostream_iterator<string>(cout, " ")); // all content is printed out through cout
+
+// Make it terse - combine into One statement
+copy(istream_iterator<string>(cin), istream_iterator<string>(), 
+            ostream_iterator<string>(cout, " "));
+
+
+// 3. Reverse Iterator:
+vector<int> vec = {4,5,6,7};
+reverse_iterator<vector<int>::iterator> ritr;
+for (ritr = vec.rbegin(); ritr != vec.rend(); ritr++)
+   cout << *ritr << endl;   // prints: 7 6 5 4
+
+
+
+// Algorithms  - mostly loops
+vector<int> vec = { 4, 2, 5, 1, 3, 9};
+
+vector<int>::iterator itr = min_element(vec.begin(), vec.end()); // itr -> 1
+
+// Note 1: Algorithm always process ranges in a half-open way: [begin, end) - begin included; end - NOT included
+sort(vec.begin(), itr);  // vec: { 2, 4, 5, 1, 3, 9} - itr points to 1 but it is not included in half - open
+
+reverse(itr, vec.end());  // vec: { 2, 4, 5, 9, 3, 1}   itr => 1 and end() => one element past 9. Range [1,3,9]
+							// finally it => 9 NOT to 1
+
+
+// Note 2:
+vector<int> vec2(3);
+copy(itr, vec.end(),  // Source
+     vec2.begin());   // Destination
+     //vec2 needs to have at least space for 3 elements otherwise the result is undefined (NOT SAFE).
+
+// Note 3: Safety option is back_inserter but not efficient - insert one item at a time
+vector<int> vec3; // EMPTY vector 
+copy(itr, vec.end(), back_inserter(vec3));  // Inserting instead of overwriting 
+                  // back_insert_iterator      Not efficient
+
+// Safe and Efficient Solution:
+vec3.insert(vec3.end(), itr, vec.end());  // Efficient and safe
+
+
+
+// Note 4: Algorithm with function
+bool isOdd(int i) {
+   return i%2;
+}
+
+int main() {
+   vector<int> vec = {2, 4, 5, 9, 2}
+   vector<int>::iterator itr = find_if(vec.begin(), vec.end(), isOdd);  // itr -> 5
+}
+
+// Note 5: Algorithm with native C++ array
+int arr[4] = {6,3,7,4};
+sort(arr, arr+4); // Pointer is considered as iterator
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Advanced C++: How to Define new Handler
+// https://www.youtube.com/watch?v=lfqiH422WUc&list=PLE28375D4AC946CC3&index=29
+
+/* 
+ 	 new-handler must to do one of following things:
+ 	 1). Make more memory available.
+ 	 2). Install a different new-handler. If last handler couldn't find/allocate memory
+ 	 3). Uninstall the new-handler (passing a null pointer).
+ 	 4). Throw an exception bad_alloc or its descendent.
+ 	 5). Terminate the program.
+ */
+// Example 1:
+int main() {
+   int *pGiant = new int[10000000000L];
+   delete[] pGiant;
+}
+
+// OUTPUT:
+terminate called after throwing an instance of 'std::bad_alloc'
+
+
+
+
+// Example 2: Global new-handler
+void NoMoreMem() {
+   std::cerr << "Unable to allocate memory, Bo." << endl;
+   abort();
+}
+int main() {
+   std::set_new_handler(NoMoreMem);
+   int *pGiant = new int[10000000000L];
+   delete[] pGiant;
+}
+
+// Output:
+Unable to allocate memory, Bo.
+
+
+// Example 3:  Class specific new-handler
+class dog {
+   int hair[10000000000L];
+   std::new_handler origHandler;
+   public:
+   static void NoMemForDog() {
+      std::cerr << "No more memory for doggy, Bo." << endl;
+	  // Duplicate restore the origHander incase '::operator new' throws exception
+      std::set_new_handler(origHandler);
+      throw std::bad_alloc;
+   }
+   void* operator new(std::size_t size) throw(std::bad_alloc) {
+      origHandler = std::set_new_handler(NoMemForDog); // get the old hander and set new handler
+      void* pV = ::operator new(size);   // Call global operator new
+      std::set_new_handler(origHandler); // Restore old handler
+      return pV;
+   }
+};
+
+
+int main() {
+   std::shared_ptr<dog> pd(new dog()); 
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Advanced C++: Demystifying Operator new/delete
+// https://www.youtube.com/watch?v=IO0EmgOagMY&list=PLE28375D4AC946CC3&index=28
+
+// Demystifying Operator new/delete
+
+// What happens when following code is executed? 
+ 
+
+   dog* pd = new dog();
+/* 
+  Step 1. operator new is called to allocate memory for dog.
+  Step 2. dog's constructor is called to create dog.
+  Step 3. if step 2 throws an exception, call operator delete to free the memory allocated in step 1.
+  Note: if step 1 throws and exception, delete wouldn't be called bcos C++ assumes that step 1 always succeed.
+ */
+   delete pd;
+/* 
+  Step 1. dog's destructor is called.
+  Step 2. operator delete is called to free the memory.
+ */
+
+//   Global 'Operator new':
+//   This is how the 'operator new' may look like if you re-implement it. 
+//   Note: new handler is a function invoked when operator new failed to allocate memory.
+//         set_new_handler() installs a new handler and returns current new handler.
+void* operator new(std::size_t size) throw(std::bad_alloc) {
+   while (true) {
+      void* pMem = malloc(size);   // Allocate memory
+      if (pMem) 
+         return pMem;              // Return the memory if successful
+
+	  // memory allocation is NOT successful
+      std::new_handler Handler = std::set_new_handler(0);  // Get new handler
+      std::set_new_handler(Handler);
+
+      if (Handler)
+         (*Handler)();      // Invoke new handler and finally call the operator new again for memory allocation
+      else
+         throw bad_alloc(); // If new handler is null, throw exception
+   }
+}
+
+// Member 'Operator new':
+class dog {
+   public:
+   static void* operator new(std::size_t size) throw(std::bad_alloc) // User defined 'operator new'
+   {
+         customNewForDog(size); // PROBLEM:Dog memory size is allocated for Yellowdog
+   }
+};
+
+class yellowdog : public dog { };
+
+int main() {
+   yellowdog* py= new yellowdog(); // calls user defined 'operator new' NOT a global 'operator new'
+}
+
+
+// Solution 1: 
+class dog {
+   public:
+   static void* operator new(std::size_t size) throw(std::bad_alloc) // User defined 'operator new'
+   {
+      if (size == sizeof(dog))
+         customNewForDog(size);
+      else
+         ::operator new(size); // call global 'operator new' for Yellowdog
+   }
+};
+
+// Solution 2: Overload 'operator new' for yellowdog too
+class yellowdog : public dog {
+   static void* operator new(std::size_t size) throw(std::bad_alloc) 
+};
+
+
+// operator delete
+class dog {
+   // virtual static void operator delete(void* pMemory) throw() // virtual & static will NOT go together
+   static void operator delete(void* pMemory) throw() // You cann't make polymorphic by adding virtual keyword
+   {
+      cout << "Bo is deleting a dog, \n";
+      customDeleteForDog();
+      free(pMemory);
+   }
+  // ~dog() {};
+  virtural ~dog() { }; // Even it is a do nothing destructor it MUST be a virtual otherwise 
+  // 1. Class will not be polymorphic 2. ONLY dog memory will get deleted (Yellowdog stay for ever in the memory). 
+};
+
+class yellowdog : public dog {
+   static void operator delete(void* pMemory) throw() {
+      cout << "Bo is deleting a yellowdog, \n";
+      customDeleteForYellowDog();
+      free(pMemory);
+   }
+};
+
+int main() {
+   dog* pd = new yellowdog();
+   delete pd;
+}
+
+
+/*
+ 	 Why do we want to customize new/delete
+	
+ 	 1. Usage error detection: 
+ 	    - Memory leak detection/garbage collection. 
+ 	    - Array index overrun/underrun.
+ 	 2. Improve efficiency:
+ 	    a. Clustering related objects to reduce page fault.
+ 	    b. Fixed size allocation (good for application with many small objects).
+ 	    c. Align similar size objects to same places to reduce fragmentation.
+ 	 3. Perform additional tasks:
+ 	    a. Fill the deallocated memory with 0's - security.
+ 	    b. Collect usage statistics.
+ */
+
+/*
+ 	 Writing a GOOD memory manager is HARD!	
+ 	 Before writing your own version of new/delete, consider:
+	
+ 	 1. Tweak your compiler toward your needs;
+ 	 2. Search for memory management library, E.g. Pool library from Boost.
+ */
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: https://www.youtube.com/watch?v=ZBK7aZ8v6vE&list=PLE28375D4AC946CC3&index=27
