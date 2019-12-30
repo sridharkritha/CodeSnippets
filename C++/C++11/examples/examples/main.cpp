@@ -1,6 +1,5 @@
 #if 1
 
-
 #else
 /* $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
 // Ref:
@@ -15,7 +14,330 @@ int main()
 	return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// C++ Stream #4: Manipulators
+// https://www.youtube.com/watch?v=yMseUJm1604&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=20
 
+// endl function - Manipulator - fuction which manipulate the stream
+ostream& endl(ostream& sm) {
+	sm.put('\n');
+	sm.flush();
+	return sm;
+}
+
+// << endl means that << operator takes function as param 
+ostream& ostream::operator<<(ostream& (*func)(ostream&)) {
+	return (*func)(*this);
+}
+
+int main() {
+	cout << "Hello" << endl; // endl: '\n' + flush
+	// endl is Object / Build-in data type / Function ? Ans: Function
+
+	// Other manipulators
+	cout << ends; // insert '\0'
+	cout << flush; // flush the stream
+	cin >> ws; // read and discard white space
+	cout << setw(8) << left << setfill('_') << 99 << endl; //99________
+	cout << hex << showbase << 14; // 0xe
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// C++ Stream #3: Formatted and Unformatted IO
+// https://www.youtube.com/watch?v=CdZxKlC7Y-E&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=19
+
+int main() {
+	cout << 34; // 34
+	cout.setf(ios::oct, ios::basefield);
+	cout << 34; // 42
+	cout.setf(ios::showbase);
+	cout << 34; // 042
+	cout.setf(ios::hex, ios::basefield);
+	cout << 34; // 0x22
+	cout.unsetf(ios::showbase);
+	cout << 34; // 22
+	cout.setf(ios::dec, ios::basefield);
+	cout.width(10); 
+	cout << 34; //               34 (right aligned by 10 space)
+	cout.setf(ios::left, ios::adjustfield);
+	cout << 34; // 34
+	// Floating point
+	cout.setf(ios::scientific, ios::floatfield);
+	cout << 340.1; // 3.401000e+002
+	cout.setf(ios::fixed, ios::floatfield);
+	cout << 340.1; // 340.100000
+	cout.precision(3);
+	cout << 340.1; // 340.100
+
+	int i;
+	cin.setf(ios::hex, ios::basefield);
+	cin >> i; // Enter: 12 will parsed as 18
+
+	ios::fmtflags f = cout.flags(); // reads the flag value
+	cout.flags(ios::oct | ios::showbase); // set the flag value
+
+	// Member function for unformatted IO input
+	ifstream inf("MyLog.txt");
+	char buf[80];
+	inf.get(buf, 80); // read up to 80 chars and save into buf
+	inf.getline(buf, 80); // read up to 80 chars (or) until '\n'
+	inf.read(buf, 20); // read 20 chars
+	inf.ignore(3); // ignore next 3 chars from stream
+	inf.peek(); // 1 char from top of the stream
+	inf.unget(); // return 1 char back to the stream
+	inf.get(); // read 1 char backed to the stream
+	inf.gcount(); // 1 -  return the number of chacrs being ready by last unformatted read
+	inf.putback('z'); // put 1 char to the stream
+
+	// Output
+	ofstream of("MyLog.txt");
+	of.put('c'); // write 1 char
+	of.write(buf, 6); // write first 6 chars of buf
+	of.flush(); // flush the output
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref : C++ Stream #2: File Stream and Error Handling
+// https://www.youtube.com/watch?v=bzlDPBKn2Fs&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=18
+
+int main() 
+{
+	{
+		// Create
+		ofstream of("MyLog.txt"); // creates a new file for write, if the file didn't exist
+		of << "Experience is the mother of wisdom" << endl;
+	}
+
+	{
+		// Append
+		ofstream of("MyLog.txt", ofstream::app); // Move the ouput pointer to the end of the file for appending the content.
+		of << "Honesty is the best policy." << endl;
+	}
+
+	{
+		// Edit in the middle somewhere
+		ofstream of("MyLog.txt", ofstream::in | ofstream::out); // for to Move the ouput pointer to the requested position
+		of.seekp(10, ios::beg); // Move the ouput pointer 10 chars after begin
+		of << "12345"; // Overwrites 5 chars
+		of.seekp(-5, ios::end); // Move the output pointer 5 chars before end
+		of << "Nothing ventured, nothing gained.";
+		of.seekp(-5, ios::cur); // Move the output pointer 5 chars before current position
+	}
+
+	ifstream inf("MyLog.txt"); // input stream
+
+	int i;
+	inf >> i; //read one word
+	if(inf >> i) cout<< "Read successfully";
+	// Error Status code : goodbit, badbit, failbit, eofbit
+	inf.good(); // Everything is OK (goodbit == 1)
+	inf.bad(); // Non-recoverable error (badbit==1)
+	inf.fail(); // failed stream operation. (failbit == 1, badbit == 1)
+	inf.eof(); // End of file (eofbit == 1)
+
+	inf.clear(); // (or) clear(ios::goodbit) - set goodbit == 1 and all other to 0
+	inf.clear(ios::badbit); // set batbit == 1 and all others to 0
+	
+	inf.rdstate(); // read the current status flag
+	inf.clear(inf.rdstate() & ~ios::failbit); // clear only the failbit
+
+	// Throws 'ios::failure' exception if any of the args is set
+	inf.exception(ios::badbit | ios::failbit); 
+	inf.exception(ios::goodbit); // No exception will be thrown bcos of goodbit is set to 1.
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// C++ Stream #1: Introductory
+// https://www.youtube.com/watch?v=hk5NYscSPHI&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=17
+
+int main() 
+{
+	// C++ input/output library - stream
+	cout << "Hello" << endl; // output the string(hello) to cout
+	// cout : A global object of ostream [ typedef basic_ostream<char> ostream ]
+	//   << : member function of ostream [ ostream& ostream::operator<< (string s) ]
+	// endl : '\n' + flush
+
+	// What is stream ? Serial IO interface to external devices (file, stdout/stdin, network, etc.,)
+	string s("Hello");
+	s[3] = 't'; // supports random access so it is NOT Serial type interface. 
+	// cout[3] = 't'; // don't support random access so it is serial type interface
+
+		{
+			// file stream support limited random access file pointer
+			ofstream of("MyLog.txt");
+			of << "Experience is the mother of Wisdom" << end;
+			of << 1234 << endl;
+			of << 3.14 << endl;
+			of << bitset<8>(14) << endl; // 00001110
+			of << complex<int>(2,3) << endl; // (2,3)
+		} // RAII - file will close at this point
+
+	// Use of stream class :
+	// 1. Formatting the data 
+	// 2. Communicating the data with external devices	
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// C++ String #5: String and Algorithms
+// https://www.youtube.com/watch?v=Z4HOLxIkpj0&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=16
+int main() {
+	// String and Algorithms
+	s = "Variety is the spice of life";
+	int num = count(s.begin(), s.end(), 'e'); // 4
+	num = count_if(s.begin(), s.end(), [](char c) { c <='e' && c>= 'a'; }); // 6
+
+	s = "Goodness is better than beauty.";
+	string::iterator itr = search_n(s.begin(), s.begin()+20, 2, 's'); // itr points to 's' from spice
+	s.erase(itr, itr+5);
+	s.insert(itr, 3, 'x');
+	s.replace(itr, itr+3, 3, 'y');// memeber function -  Replacing substring
+
+	replace(s1.begin(), s.end(), 'e', ' '); // algorithm function - Replacing characters
+	is_permutation(s.begin(), s.end(), s2.begin()); // test s is a permutation of s2
+	transform(s.begin(), s.end(), s2.begin(), [](char c) { if(c < 'r') return 'a'; else return 'z';}); // POWERFUL
+	s = "abcdefg";
+	rotate(s.begin(), s.end()+3, s.end()); // s = defgabc
+
+	// Other possible string types
+	string s;
+	u16string s16; // string char16_t
+	u32string s32; // string char32_t
+	wstring sw;    // string wchar_t
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// C++ String #4: Non-member Functions
+// https://www.youtube.com/watch?v=8lMAMQZRwQM&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=15
+int main() {
+	// NON member functions
+	cout<< s;
+	cin >> s;
+	getline(cin, s); // default delimiter of '\n'
+	getline(cin, s, ';'); // delimiter is ';'
+
+	// Convert a number into a string
+	s = to_sting(8); // s: 8
+	s = to_sting(2.3e7); // s: 23000000.000000
+	s = to_sting(0xa4); // s: 164
+	s = to_sting(034); // s: 28
+
+	// Convert a STRING into a NUMBER
+	s = "190";
+	int i = stoi(s1); // i: 190
+
+	s= "190 monekeys"
+	size_t pos;
+	i = stoi(s, &pos); // i:190    pos == 3 (position of space where the parser has stopped parsing)
+
+	s = "a monekey";
+	i = stoi(s1, &pos); // exception of invalid_argument
+	i = stoi(s1, &pos, 16); // i == 10, hexa value of a
+
+	// similarly - stol, stod, stof
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ String #3: Member Function Algorithms
+// https://www.youtube.com/watch?v=avZfl3VoKw0&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=14
+int main() {
+	// member functions - copy, find, compare
+	s1 = "abcdefg"; // cstring - invisible \0 null terminated inside quotes
+	char buf[20];
+	size_t len = s1.copy(buf, 3); // buf: abc   (without null terminated possible will show some strange charaters)
+	// copy api is the only inconsistence design. Here 4 - size, 2 - pos
+	len = s1.copy(buf, 4, 2); // buf: cdef
+
+	s1 = "If a job is worth doing, it's worth doing well";
+	size_t found = s1.find("doing"); // found == 17, d - pos
+	found = s1.find("doing", 20); // found == 35, start searching from pos 20
+	found = s1.find("doing well", 0); // found == 35
+	found = s1.find("doing well", 0, 5); // found == 17, search for only first 5 (doing) from pos 0
+
+	found = s1.find_first_of("doing"); // found == 6, pos of 'o'
+	found = s1.find_first_of("doing", 10); // found == 12, start search from pos 10
+	found = s1.find_first_of("doing", 10, 1); // found == 17, d - pos	
+
+	found = s1.find_last_of("doing"); // found == 39, 'g' is the first char found when searching from last	
+	found = s1.find_last_not_of("doing"); // found == 44, pos of 'l' from "well"
+	found = s1.find_first_not_of("doing"); // found == 0, pos of 'I' from "If"
+
+	s1.compare(s2); // +ve if(s1 > s2); -ve if(s1 < s2); 0 if(s1 == s2)
+	if(s1 > s2) { } // == if(s1.compare(s2) > 0) { }
+	if(s1.compare(3,2,s2)) { } // 3 - pos, 2 -size
+
+	string s3 = s1 + s2; // strings concatenation
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ String #2: Accessing String Characters
+// https://www.youtube.com/watch?v=6OCaJbL-kMQ&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=13
+int main() {
+	// Single Element Access
+	s1 = "Goodbye";
+	s1[2]; // o
+	s1[2] = 'x'; // Goxdbye
+	s1.at(2) = 'y'; // Goydbye
+	s1[20]; // undefined behaviour
+	s1.at(20); // throw exception - out_of_range
+
+	// string has similar api's like vector
+	s1.front(); // G
+	s1.back(); // e
+	s1.push_back('z'); // Goydbyez - append at last
+	s1.pop_back(); // Goydbye   - remove from last
+	s1.begin();
+	s1.end();
+	// Like vector, string doesn't have  -  push_front() and pop_front() bcos those are too expensive
+	string s2(s1.begin(), s1.begin()+3); // s2: Goo          - copy constructor
+
+	// Ranged Access
+	// assign, append, insert, replace
+	string s2 = "Dragon Land";
+
+	s1.assign(s2); // s1 = s2
+	s1.assign(s2, 2, 4); // s1: agon, 2 - pos, 4 - size
+	s1.assign("Wisdom"); // s1: Wisdom, "Wisdon" is cstring NOT string
+	s1.assign("Wisdom", 3); // s1: Wis , 3 - size NOT pos
+	// s1.assign(s2, 3); // ERROR, s2 is string NOT cstring, needs size param as well
+	s1.assign(3, 'x'); // s1: "xxx"
+	s1.assign({'a','b','c'}); // s1: abc
+
+	// similiarly you can do for append, insert and replace
+	s1.append(" def"); // s1: abc def
+	s1.insert(2, "mountain", 4); // s1: abmounc def
+	s1.replace(2,5,s2,3,3); // s1: abgon def  2 - pos, 3 - size, 3 - pos, 3 - size
+
+	s1.erase(1,4); // s1: a def
+	s1.substr(2,4); // s1: agon
+
+	s1= "abc"; 
+	s1.c_str(); // "abc\0"
+	s1.data(); // "abc"   in C++ 03
+	s1.data(); // "abc\0" in C++ 11
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// C++ String #1: Constructor and Size
+// https://www.youtube.com/watch?v=JqXAcD1UfXM&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=12
+int main() {
+	// String Constructors
+	string s1("Hello");         // s1: Hello
+	string s2("Hello", 3);      // s2: Hel           3 - Size
+	// Copy Constructor- copy from s1 TO s3
+	string s3(s1, 2);           // s3: llo               2- starting POS
+	string s4(s1,2,3);          // s4: ll               2- pos, 3 - size
+	string s5(5, 'a');          // s5: aaaaa
+	string s6({'a', 'b', 'c'}); // s6: abc
+
+	// size
+	s1 = "Goodbye";
+	s1.size(); s1.length(); // synonymous, both returns 7
+	s1.capacity();          // size of storage space currently allocated to s1
+	s1.reserve(100);        // 100 chars reserver for s1
+	s1.reserve(5);          // s1.capacity() == s1.size == 7, s1: Goodbye
+	s1.shrink_to_fit();     // s1.capacity() == s1.size == 7, s1: Goodbye
+
+	// resize
+	s1.resize(9);       // s1: Goodbye\0\0
+	s1.resize(12, 'z'); // s1: Goodbye\0\0zzz         s1.size() == 12
+	s1.resize(3);       // s1: Goo
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Non-modifying Algorithms -  count, min and max, compare, linear search, attribute 
 
