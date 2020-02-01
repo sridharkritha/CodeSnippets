@@ -1,6 +1,57 @@
 #if 1
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Operator precedence:
+// '!=' Higher precedence than '='
+	while((c = getchar()) != EOF) 
+
+// '==' Higher precedence than '||'
+	// Shortcircuit - Expressions connected by '|| && ' are evaluated LEFT to RIGHT
+	if(c == '\n' || c == ' ' || c == '\t') // LEFT to RIGHT
+
+// Assignment expression evaluated RIGHT to LEFT
+	a = b = c = 0; // RIGHT to LEFT
+	a = (b = (c = 0)); 
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copy input to output
+// Version 1:
+#include <stdio.h>
+int main() {
+	int c; // NOT char c bcos it cann't hold 'EOF'
+	c = getchar();
+	while(c != EOF) {
+		putchar(c);
+		c = getchar();
+	}
+}
+
+// Version 2:
+#include <stdio.h>
+int main() {
+	int c;
+	// '!=' Higher precedence than '='
+	while((c = getchar()) != EOF) putchar(c);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+// Count characters in input
+// Version 1:
+#include <stdio.h>
+int main() {
+	long nc = 0; // 4 bytes
+	while(getchar() != EOF) ++nc;
+	printf("%ld", nc);
+}
+
+// Version 2:
+#include <stdio.h>
+int main() {
+	double nc = 0; // 4 bytes - double instead of 'long' - have same effect here
+	for(nc = 0; getchar() != EOF; ++nc);
+	printf("%.0f", nc); // .0f suppresses printing of decimal point andd the fraction part 
+}
 
 
 
