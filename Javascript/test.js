@@ -1,4 +1,64 @@
 
+// var ob1 = { "a": "apple"};
+// var ob2 = { "a": "aeroplane"};
+anon = function() {
+	var a = 5;
+	var b = 10;
+	var self = this;
+
+	console.log(self.a);
+	console.log(this.b);
+	
+	setTimeout(function(){
+		console.log(self.a);
+		console.log(this.b);
+	}.bind(this), 100);
+
+}();
+
+
+
+// function someFunc() {
+// 	var self = this;
+// 	console.log(self.a);
+// 	console.log(this.b);
+// 	setTimeout(function(){
+// 		console.log(self.a);
+// 		console.log(this.b);
+// 	}.bind(this), 100);
+// }
+
+// someFunc();
+
+
+
+
+/*
+var x = "Global";
+function fun() {
+	console.log("sridhar");
+	x = "Local";
+	console.log(x);
+	console.log(this.x);
+}
+
+fun();
+
+function foo() {
+    console.log(this);
+}
+
+// normal function call
+foo(); // `this` will refer to `window`
+
+// as object method
+var obj = {bar: foo};
+obj.bar(); // `this` will refer to `obj`
+
+
+
+
+
 // objects are only truly equal to themselves.
 var foo = [1,2,3];
 var bar = [1,2,3];
@@ -66,6 +126,8 @@ function spliceSplit(str, index, deleteCount, addElement) {
 }
 
 console.log(spliceSplit("sridhar", 1, 2, 'wxyz' )); // swxyzdhar
+
+*/
 
 
 
