@@ -1,4 +1,84 @@
 #if 1
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Operator precedence:
+// '!=' Higher precedence than '='
+	while((c = getchar()) != EOF) 
+
+// '==' Higher precedence than '||'
+	// Shortcircuit - Expressions connected by '|| && ' are evaluated LEFT to RIGHT
+	if(c == '\n' || c == ' ' || c == '\t') // LEFT to RIGHT
+
+// Assignment expression evaluated RIGHT to LEFT
+	a = b = c = 0; // RIGHT to LEFT
+	a = (b = (c = 0)); 
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copy input to output
+// Version 1:
+#include <stdio.h>
+int main() {
+	int c; // NOT char c bcos it cann't hold 'EOF'
+	c = getchar();
+	while(c != EOF) {
+		putchar(c);
+		c = getchar();
+	}
+}
+
+// Version 2:
+#include <stdio.h>
+int main() {
+	int c;
+	// '!=' Higher precedence than '='
+	while((c = getchar()) != EOF) putchar(c);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+// Count characters in input
+// Version 1:
+#include <stdio.h>
+int main() {
+	long nc = 0; // 4 bytes
+	while(getchar() != EOF) ++nc;
+	printf("%ld", nc);
+}
+
+// Version 2:
+#include <stdio.h>
+int main() {
+	double nc = 0; // 4 bytes - double instead of 'long' - have same effect here
+	for(nc = 0; getchar() != EOF; ++nc);
+	printf("%.0f", nc); // .0f suppresses printing of decimal point andd the fraction part 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #else
 /* $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ */
@@ -13,6 +93,694 @@ int main()
 
 	return 0;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref : Learn STL: Object Slicing
+// https://www.youtube.com/watch?v=qe5s9oTsY0s&list=PL5jc9xFGsL8E_BJAbOw_DH6nWDxKtzBPA&index=8
+
+// What is object slicing in STL containers ?
+
+	class Dog {
+		public:
+		void bark() { cout<< "I don't have a name"; } // NOT a virtual function
+	};
+
+	class YellowDog : public Dog {
+		string mName;
+		public:
+		YellowDog(string name): mName(name) { }
+		void bark() { cout << "My name is " << mName; }
+	};
+
+	void foo(Dog d) {  // Problem 2: Dog is copied NOT YellowDog. ONLY sliced version is copied. }
+
+	int main() {
+		YellowDog y("Gunner");
+		deque<Dog> d;
+		// STL containers always copy objects bcos of passing by value.
+		// Also 'Pass by value' cause a 'static cast' which slice the object. 
+		d.push_front(y); // y is NOT pushed instead the copy constructed Dog is pushed. Sliced version of 'y' is pushed.
+		d[0].bark();     // I don't have a name [ PROBLEM 1 ]
+
+		foo(y); // [ PROBLEM 2]
+	}
+
+	Solution:
+	// Problem 1:
+	// Step 1: Use Reference 
+	int main() {
+		YellowDog y("Gunner");
+		// Change to Pointer
+		deque<Dog*> d;
+		d.push_front(&y); // y is instead (Slicing avoided)
+		d[0]->bark();     // My name is Gunner
+	}
+
+	// Step 2: Make it Virtural:
+	class Dog {
+		public:
+		virtual void bark() { cout<< "I don't have a name"; }
+	};
+
+	// Problem 2:
+	// Use Reference and Virtual Function
+	void foo(Dog* d) { // pointer is passed by value so pointer is copied with static cast but the content can be casted dynamically 
+		YellowDog* py = dynamic_cast<YellowDog*>(d); // Avoid static cast
+		cout << py->mName << endl;
+	}
+	
+	foo(&y);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// vector
+	// Ref: Learn STL: Vector vs. Deque - part I
+	// https://www.youtube.com/watch?v=Ct8ykaKrKOA&list=PL5jc9xFGsL8E_BJAbOw_DH6nWDxKtzBPA&index=6
+	int main() {
+		vector<int> vec = {2,3,4,5};
+		cout<< vec.size << vec.capacity(); // vec.size() == 4, vec.capacity() == 4, 
+		vec.push_back(6); // Capcity is full so reallocation will happen
+		cout<< vec.size << vec.capacity(); // vec.size() == 5, vec.capacity() == 8 (NOT 5)  
+		// Reallocation happens(mostly double the capacity of old one) whenever the capacity is full.
+	}
+	class Dog;
+
+	int main() {
+		// Example 1:
+		vector<Dog> vec(6);  // vec.capacity() == 6, vec.size() == 6, 
+							// 6 Dogs created with default constructor
+
+		// Example 2:
+		vector<Dog> vec; // vec.capacity() == 0, vec.size() == 0
+		vec.resize(6);   // vec.capacity() == 6, vec.size() == 6,  
+						// 6 Dogs created with default constructor  
+
+		// Example 3:
+		vector<Dog> vec;  // vec.capacity() == 0, vec.size() == 0
+		vec.reserve(6);   // vec.capacity() == 6, vec.size() == 0 (NOT 6), 
+							// no default constructor invoked
+	}
+
+	/*
+	Strategy of avoiding reallocation:
+		1. If the maximum number of item is known, use reserve(MAX);
+		2. If unknown, reserve as much as you can, once all data a inserted, trim off the rest.
+	*/
+
+	// For trim off:
+	v.shrink_to_fit();      // C++ 11
+	vector<int>(c).swap(c); // C++ 03
+
+
+
+
+
+
+
+
+
+	/*
+	 Advantages of deque :	
+							- No reallocation 
+							- deque has no reserve() and capacity()
+							- But slightly slower than vector
+	*/
+
+
+
+
+
+
+	// Ref: Learn STL: Vector vs. Deque - part II
+	// https://www.youtube.com/watch?v=pW2jDTf82IM&list=PL5jc9xFGsL8E_BJAbOw_DH6nWDxKtzBPA&index=7
+
+
+
+	/*
+	Which one to use?
+		- Need to "push_front" a lot?  -> deque
+		- Performance is important?   -> vector
+	*/
+
+
+
+
+
+
+
+
+
+
+	Prerfer deque if - 
+
+
+	1. Element data type: When the elements are not build in type, deque is not much less efficient than vector. Mostly all container behave bit less performance than usual.	
+	
+	2. Memory Availability:
+		Could allocation of large contiguous memory be a problem? 
+		- Limited memory size
+		- Large trunk of data
+	
+	3. Frequency of Unpredictable Growth:
+	
+	vector<int> vec;
+	for (int x=0; x<1025; x++) 
+		vec.push_back(x);   // 11 reallocations performed (growth ratio = 2)
+							//   workaround: reserve()
+	
+	4. Invalidation of pointers/references/iterators because of growth
+	
+	vector<int> vec = {2,3,4,5}; 
+	int* p = &vec[3]
+	vec.push_back(6);   // Reallocation happens - all pointer/ref/itr becomes invalid
+	cout << *p << endl; // Undefined behavior
+
+	deque<int> deq = {2,3,4,5};
+	p = &deq[3];
+	deq.push_back(6);
+	cout << *p << endl;  // OK
+	// push_front() is OK too
+	// deque: inserting at either END won't invalidate pointers
+	// Note: removing or inserting in the MIDDLE still will invalidate pointers/references/iterators
+	
+	5. Vectors unique feature: portal to C
+	
+	// Passing data from a vector to C
+	vector<int> vec = {2,3,4,5};	
+	void c_fun(const int* arr, int size);
+	c_fun(&vec[0], vec.size());
+
+	// Passing data from a list to C
+	list<int> mylist;
+	// All other containers need to copy on vector before passing to C function
+	vector<int> vec(mylist.begin(), mylist.end()); 
+	c_fun(&vec[0], vec.size());
+
+	// NOTE: &vector[0] can be used as a raw array.
+	// Exception: vector<bool> 
+	vector<bool> vec = {true, true, false, true}; 
+	void cpp_fun(const bool* arr, int size); // bool type is NOT supported in C
+	cpp_fun(&vec[0], vec.size()); // Compiler Error: &vec[0] is not a bool pointer bcos it optimized to bit values
+								  // workaround: use vector<int>, or bitset
+
+	/*
+	Summary:
+		1. Frequent push_front()    - deque
+		2. High performance         - vector
+		3. Non-build in data type   - deque
+		4. No Contiguous memory     - deque
+		5. Unpredictable growth     - deque
+		6. Pointer integrity        - deque
+		7. Talk to C                - vector
+	*/
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Remove and do something else
+
+// Ref : Learn STL: Removing Elements 2
+// https://www.youtube.com/watch?v=3b_1BDbbu14&list=PL5jc9xFGsL8E_BJAbOw_DH6nWDxKtzBPA&index=5
+
+// Associative Container:
+multiset<int> s = {1, 4, 1, 1, 1, 12, 18, 16};;
+
+multiset<int>::iterator itr;
+for (itr=s.begin(); itr!=s.end(); itr++) {
+   if (*itr == 1) { // Remove all 1
+      s.erase(itr); // itr becomes invalid, so it will CRASH on next cycle of the for loop on itr!=s.end() check.
+      cout << "Erase one item of " << *itr << endl; // OK - prints 1. itr and *itr are different
+	  // First erase OK; second one is undefined behavior
+   } 
+}
+
+// Solution:
+for (itr=s.begin(); itr!=s.end(); ) // MOVE the itr increment to the bottom
+{
+   if (*itr == 1) { // Remove all 1
+      cout << "Erase one item of " << *itr << endl; // OK - moved above erase()
+	  // postfix increment returns old itr for to delete the item and advance to next element.
+      s.erase(itr++); // itr points to item to be deleted and becomes invalid, itr++ points to next element.
+	  // {4, 12, 18, 16}
+   } else {
+      itr++;
+   }
+}
+
+
+// Sequence Container:
+vector<int> v = {1, 4, 1, 1, 1, 12, 18, 16};
+vector<int>::iterator itr2;
+for (itr2=v.begin(); itr2!=v.end(); ) {
+   if (*itr2 == 1) { // Remove all 1
+      cout << "Erase one item of " << *itr2 << endl;
+	  // In ALL sequence containers - if an element is erased then all the iterators AFTER that erased element will be INVALID.
+      v.erase(itr2++);// Eventhough itr++ moved to next element, it is invalid/undefined behaviour for the sequence containers.
+	  // {4, 1, 12, 18, 16} - WRONG - Undefined behaviour
+   } else {
+      itr2++;
+   }
+}
+
+// Solution:
+for (itr2=v.begin(); itr2!=v.end(); ) {
+   if (*itr2 == 1) { // Remove all 1
+      cout << "Erase one item of " << *itr2 << endl;
+	  // v.erase(itr2++);   // Wouldn't work correctly also DONOT CRASH - very bad error
+      itr2 = v.erase(itr2); // OK. Sequence container and unordered container's erase() returns  
+                            // iterator pointing to next item after the erased item.
+   } else {
+      itr2++;
+   }
+}
+
+/*
+Summary:
+		1. Sequence container and unordered container's erase() returns the next iterator after the erased item.
+					itr = v.erase(itr);
+		2. Associative container's erase() returns nothing.
+					v.erase(itr++)
+
+
+*/
+
+vector<int> c = {1, 4, 1, 1, 1, 12, 18, 16};
+
+// Use Algorithm - on Sequence Container:
+bool equalOne(int e) {
+   if (e == 1) { // Remove all 1
+      cout << e << " will be removed" << endl;
+      return true;
+   }
+   return false;
+}
+
+auto itr = remove_if(c.begin(), c.end(), equalOne);
+c.erase(itr, c.end()); // {4, 12, 18, 16}
+
+
+
+// bind()- Pass the num as param, you want to erase. 
+bool equalOne(int e, int d) //
+{
+   if (e == d) // Remove all 'd'. d is 12
+   {
+      cout << e << " will be removed" << endl;
+      return true;
+   }
+   return false;
+}
+remove_if(v.begin(), v.end(), bind(equalOne, placeholders::_1, 12));
+c.erase(itr, c.end()); // {1, 4, 1, 1, 1, 18, 16}
+
+
+
+// Lambda:
+auto itr = remove_if(v.begin(), v.end(), 
+      [](int e){ 
+         if(e == 12) {
+            cout << e << " will be removed" <<endl; 
+			return true; 
+         }
+		else return false		 
+      } 
+   );
+c.erase(itr, c.end()); // {1, 4, 1, 1, 1, 18, 16}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Removing items from the containers
+// Ref: Learn STL: Removing Elements 1
+// https://www.youtube.com/watch?v=q5OfB6ZXT6E&list=PL5jc9xFGsL8E_BJAbOw_DH6nWDxKtzBPA&index=4
+
+int main() {
+	// Vector - Remove elements
+	vector<int> v = { 1, 4, 6, 1, 1, 1, 1, 12, 18, 16 }; // Remove 1's
+
+	// Method 1: Member function remove. BAD performance. Complexity = O(n*m); n - no. of source elements, m - no. of elements to be removed.
+	for(vector<int>::iterator itr = v.begin(); itr != v.end();) {
+		if(*itr == 1) itr = v.erase(itr); // member function
+		else          itr++;
+	}  // { 4, 6, 12, 18, 16 }
+	// Step 0: { 1, 4, 6, 1, 1, 1, 1, 12, 18, 16 } - Source elements
+	// Step 1:	{ 4, 6, 1, 1, 1, 1, 12, 18, 16 }    - All elements are moved one step forward to remove single element 1
+	// Step 2: { 4, 6, 1, 1, 1, 12, 18, 16 }
+	// Step 3:	{ 4, 6, 1, 1, 12, 18, 16 }
+	// Step 4:	{ 4, 6, 1, 12, 18, 16 }
+	// Step 5:	{ 4, 6, 12, 18, 16 }
+
+	// Method 2: Algorithm function remove. More Efficient. Complexity = O(n)
+	auto itr = remove(v.begin(), c.end(), 1); // { 4, 6, 12, 18, 16, 1, 1, 12, 18, 16 } - PROBLEM
+	// Algorithm remove, move the resultant elements to the front and set the new logical end. Also keep the old values in the old place.
+
+	v.erase(itr, v.end); // Member function is MUST here. { 4, 6, 12, 18, 16 }
+
+	cout << v.capcity();    // capacity = 10
+	v.shrink_to_fit();      // capacity = 5 ;  C++11 way of shrink the size
+	vector<int>(v).swap(v); // capacity = 5 ;  C++03 way of shrink the size
+}
+
+int main() {
+	// List - Remove elements
+	list<int> v = { 1, 4, 6, 1, 1, 1, 1, 12, 18, 16 }; // Remove 1's
+
+	// Algorithm function remove. Complexity = O(n)
+	auto itr = remove(v.begin(), c.end(), 1); // { 4, 6, 12, 18, 16, 1, 1, 12, 18, 16 }
+	v.erase(itr, v.end); // { 4, 6, 12, 18, 16 }
+
+	// Special Member function remove. FASTER than above algorithm way of removing the elements
+	v.remove(1); // Unlike the algorithm way of moving elements to the front. Here elements front/back linked list pointer are updated.
+}
+
+int main() {
+	// Assosiative container / Unordered container - Remove elements
+	multiset<int> v = { 1, 4, 6, 1, 1, 1, 1, 12, 18, 16 }; // Remove 1's
+
+	// Algorithm function remove. Complexity = O(n)
+	auto itr = remove(v.begin(), c.end(), 1); // { 4, 6, 12, 18, 16, 1, 1, 12, 18, 16 }
+	v.erase(itr, v.end); // { 4, 6, 12, 18, 16 }
+
+	// Special Member function. Complexity = O(log(n)) if Assosiative, O(1) if Unordered Container
+	v.erase(1); // FASTER
+}
+
+/*
+
+Summary of Removing Elements:
+		1. Vector or Deque: Algorithm remove() followed by erase()
+		2. List:            Member function remove()
+		3. Associative Container or Unordered Container: erase()
+
+
+
+*/
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Learn STL: Equivalence vs Equality
+// https://www.youtube.com/watch?v=0n7Es7d9yH8&list=PL5jc9xFGsL8E_BJAbOw_DH6nWDxKtzBPA&index=3
+
+// Equality vs Equivalence
+
+class Lsb_less {
+   public:
+   bool operator()(int x, int y) { return (x%10)<(y%10); }
+};
+
+set<int, Lsb_less> s = {21, 23, 26, 27};
+set<int, Lsb_less>::iterator itr1, itr2;
+
+// Algorithm find(): looks for equality: if (x == y)
+itr1 = find(s.begin(), s.end(), 36); // itr1 -> s.end()
+
+// set<int>::find(): looks for equivalence: if ( !(x<y) && !(y<x) )
+itr2 = s.find(36);                   // itr2 -> 26 
+// 26 and 36 are the same by equivelance using the user defined comparision function
+
+Using default comparision function:
+
+set<int> s = {21, 23, 26, 27};
+itr1 = find(s.begin(), s.end(), 36);  // Algorithm       find(): itr1 points to s.end()
+itr2 = s.find(36);                    // member function find(): itr2 points to s.end() - Both are the same
+
+/*
+Guidelines for knowing which function uses Equivanence or Equality: 
+
+	If the function is using operator "<" or its like, it's checking EQIVALENCE.
+	- Typically it's algorithm that works with SORTED data, or a member function of a container with sorted data, 
+		such as ASSOCIATIVE container.
+
+	If the function is using operator "==" or its like, it's checking EQUALITY
+	- Typically the data is NOT required to be sorted
+
+Algorithms of equality:
+							search
+							find_end
+							find_first_of
+							adjacent_search
+ 
+Algorithms of equivalence:
+							binary_search   ( simple forms )
+							includes
+							lower_bound
+							upper_bound
+
+Notes:  When using a function to SEARCH or REMOVE a certain element, make sure you understand the difference between 
+		  equality and equivalence.
+ 
+
+*/
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Learn STL: Tricky Reverse Iterator
+// https://www.youtube.com/watch?v=V89gtNl4pZM&list=PL5jc9xFGsL8E_BJAbOw_DH6nWDxKtzBPA&index=2
+
+// Reverse Iterator and Iterator 
+// Two ways to declare a reverse iterator. But both are the same. One is the typedef of another.
+reverse_iterator<vector<int>::iterator> ritr; // Method 1
+vector<int>::reverse_iterator ritr;           // Method 2
+
+// Traversing with reverse iterator
+vector<int> vec = {4,5,6,7};
+reverse_iterator<vector<int>::iterator> ritr;
+for (ritr = vec.rbegin(); ritr != vec.rend(); ritr++)
+   cout << *ritr << endl;   // prints: 7 6 5 4
+
+Converstion from one iterator To another:
+vector<int>::iterator itr;
+vector<int>::reverse_iterator ritr;
+
+// Convert 'iterator' To 'reverse_iterator'. Another way WOULDN'T work.
+ritr = vector<int>::reverse_iterator(itr);
+itr = vector<int>::iterator(ritr);  // Compile Error
+
+// Convert 'reverse_iterator' To 'iterator'
+itr = ritr.base(); // C++ Standard says base() returns current iterator
+
+
+vector<int> vec = {1,2,3,4,5};
+vector<int>::reverse_iterator ritr = find(vec.rbegin(), vec.rend(), 3);
+
+cout << (*ritr) << endl;   // 3
+
+vector<int>::iterator itr = ritr.base(); // 'reverse_iterator' To 'iterator'
+cout << (*itr) << endl;   // 4  NOT 3 - 
+
+
+vec = {1,2,3,4,5};
+ritr = find(vec.rbegin(), vec.rend(), 3);
+
+// Inserting  - Both are SAME
+vec.insert(ritr, 9);         // vec: {1,2,3,9,4,5} - using reverse iterator
+// or
+vec.insert(ritr.base(), 9);  // vec: {1,2,3,9,4,5} - using iterator
+
+vec = {1,2,3,4,5};
+ritr = find(vec.rbegin(), vec.rend(), 3);
+
+// Erasing - Both are DIFFERENT
+vec.erase(ritr);        // vec: {1,2,4,5}
+// or
+vec.erase(ritr.base()); // vec: {1,2,3,5} - DIFFERENT
+
+Note:
+Inserting / Erasing from "vector" will invalidates the previous value of pointers / reference / iterator.
+Inserting / Erasing from "List, Assosiative container, Unordered container" will NOT invalidates the previous value of pointers / reference / iterator.  
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref : Learn STL: Member Functions vs Algorithm Functions
+// https://www.youtube.com/watch?v=c_SucEr4iPw&list=PL5jc9xFGsL8E_BJAbOw_DH6nWDxKtzBPA
+
+// Container's Member Functions vs Algorithms Functions [DUPLICATE Functions with same name]
+
+// Sequence Container - List:
+// List Member functions:
+void remove(const T); template<class Comp> void remove_if(Comp);
+void unique();        template<class Comp> void unique(Comp);
+void sort();          template<class Comp> void sort(Comp);
+void merge(list&);    template<class Comp> void merge(Comp);
+void reverse();
+// You can provide your own comparision function in the generalized form.
+
+////////////////////////////////////////////////////////////////////////////////////
+ForwardIterator remove (ForwardIterator first, ForwardIterator last, const T& val);
+ForwardIterator remove_if (ForwardIterator first, ForwardIterator last, UnaryPredicate pred);
+ForwardIterator unique (ForwardIterator first, ForwardIterator last, BinaryPredicate pred);
+void sort (RandomAccessIterator first, RandomAccessIterator last, Compare comp);
+OutputIterator merge (InputIterator1 first1, InputIterator1 last1, InputIterator2 first2, InputIterator2 last2, OutputIterator result, Compare comp);
+void reverse (BidirectionalIterator first, BidirectionalIterator last);
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+// Associative Container (SORTED) - Member functions:
+size_type count(const T&) const;
+iterator find(const T&) const;
+iterator lower_bound(const T&) const;
+iterator upper_bound(const T&) const;
+pair<iterator,iterator> equal_range (const T&) const;
+// Note: They don't have generalized form, because comparison is already defined by the container (sorted).
+
+
+
+// Unordered Associative Container - Member functions:
+size_type count(const T&) const;
+iterator find(const T&);
+std::pair<iterator, iterator> equal_range(const T&);
+// Note: No generalized form; uses hash function to search
+
+
+// Find an item in a set (Associative Containers) ?
+unordered_set<int> s = {2,4,1,8,5,9};  // Hash table 
+unordered_set<int>::iterator itr;
+
+// Using member function
+itr = s.find(4);                      // O(1) - Uses the hash map 
+
+// Using Algorithm
+itr = find(s.begin(), s.end(), 4);    // O(n) - Traverse from start to end
+
+
+
+// How about map/multimap (Associative Containers)?
+map<char, string> mymap = {{'S',"Sunday"}, {'M',"Monday"}, {'W', "Wendesday"}, ...};
+
+
+// Using member function
+itr = mymap.find('F');                                           // O(log(n)) - Need only KEY for comparision
+
+// Using Algorithm
+itr = find(mymap.begin(), mymap.end(), make_pair('F', "Friday")); // O(n) - Need BOTH KEY and VALUE for comparision
+
+
+
+// How about list....Remove an element from the list (Sequence Container) ?
+list<int> s = {2,1,4,8,5,9};
+
+// Using member function
+s.remove(4);                    // O(n) - To find the element, O(1) - Remove the element
+// s: {2,1,8,5,9}
+
+// Using Algorithm
+itr = remove(s.begin(), s.end(), 4);  // O(n) - To find the element, O(n) - Overwrite the set of numbers
+// s: {2,1,8,5,9,9}
+s.erase(itr, s.end()); // Must be executed to remove the last item which is pointed by the iterator from remove.
+// s: {2,1,8,5,9}
+
+
+// Sort
+//
+// Member function
+s.sort();
+
+// Algorithm
+sort(s.begin(), s.end());   // Undefined behavior - Bcos algorithm sort requires random access iterator/[] but list provides only bidirectional_iterator. 
+
+// s: {2,4,1,8,5,9}
+// s: {2,1,8,5,9,9}
+/*
+list<int>::iterator itr = remove(s.begin(), s.end(), 4);  // O(n)
+s.erase(itr, s.end());
+// Similarly for algorithm: remove_if() and unique()
+*/
+
+// Using member function
+s.sort();
+
+// Using Algorithm
+sort(s.begin(), s.end());   // Undefined Behavior
+
+
+/* 
+ * Summary:
+ *
+ * 1. There are duplicated functions between container's member functions and algorithm functions.
+ * 2. Prefer member functions(knowns internal data structure) over algorithm functions with the same names.
+ *
+ */
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ Stream #7: Enable Streaming for Your Own Class
+// https://www.youtube.com/watch?v=MefRKIml_1w&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=23
+
+// Creating Stream-enabled class
+struct Dog {	int age, string name;	};
+
+ostream& operator<<(ostream& sm, const Dog& d) {
+	sm << "My name is " << d.name << " and my age is " << d.age;
+}
+
+istream& operator>>(istream& sm, Dog& d) {
+	sm >> d.age; // read from stream and put it into 'd'
+	sm >> d.name;
+	return sm;
+}
+int main() {
+	Dog d{2, "Bob"}; // Universal Initialization
+	cout << d;
+
+	cin >> d;
+	cout << d;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ Stream #6: String Stream
+// https://www.youtube.com/watch?v=VzM1GWUl8eI&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=22
+
+// String Stream
+stringstream ss; // Stream WITHOUT own IO operation (No formatting and No transfer of data to other devices)
+// stream which read data from string and write data to the string. Treating a string just like a file !.
+
+ss << 89 << " Hex: " << hex << 89 << " Oct: " << oct << 89;// offline data formatting before sending to stdio via cout 
+// formatted output
+cout << ss.str(); // 89 Hex:59 Oct: 131
+
+int a, b, c;
+string s;
+
+// Formatted input works token by token. Tokens are parsed by spaces / tabs / newlines
+// 'ss' is the formatted input 
+ss >> hex >> a; // a == 137
+ss >> s; // s == "Hex:"
+ss >> dec >> b; // b == 59
+ss.ignore(6); // ignore 6 chars
+ss >> oct >> c; // c == 89
+
+// stringstream - can be used for BOTH formatted output and input
+// ostringstream - only formatted output
+// istringstream - only formatted input
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: C++ Stream #5: Stream Buffer
+// https://www.youtube.com/watch?v=HwtFcT-ueu8&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=21
+
+// IO operation:
+// 1. formatting data by stream class
+// 2. transferring data to external devices by stream buffer(internal module of stream class).
+
+cout << 34; // 1. cout perform formatting the data as per the default settings 2.Internal stream buffer transfer to stdout
+streambuf* pbuf =  cout.rdbuf(); // returns the cout's stream buffer
+
+ostream myCout(pbuf); // You own myCout without affecting the standard cout 
+myCout << 34; // 34 to stdout
+// Change the formatting setting of myCout
+myCout.setf(ios::showpos); // show +ve sign
+myCout.width(10);
+// Both cout and myCout uses same stream buffer but different data formatting.
+myCout << 12; //           +12
+cout << 12; //12
+
+// Redirecting the stdout to file
+ofstream  of("MyLog.txt");
+streambuf*  origBuf = cout.rdbuf();
+cout.rdbuf(of.rdbuf()); // Redirecting to file rdbuf. Original cout stream buffer is lost here.
+cout << "Hello"; // MyLog.txt has "Hello"
+cout.rdbuf(origBuf); // restore the original
+cout<< "I'm back"; // I'm back to stdout
+
+// Redirecting the stdin to stdout
+// Method 1: Using 'stream buffer iterator' - print the input steam content in the output stream
+istreambuf_iterator<char> i(cin);
+ostreambuf_iterator<char> o(cout);
+while(*i != 'x')  // termination condition
+{
+	*o = *i;
+	++o;
+	++i;
+}
+
+// Method 2: Using copy method print the input stream content in the output steam without termination condition.
+copy(istreambuf_iterator<char>(cin), istreambuf_iterator<char>(), ostreambuf_iterator<char>(cout));
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // C++ Stream #4: Manipulators
 // https://www.youtube.com/watch?v=yMseUJm1604&list=PL5jc9xFGsL8G3y3ywuFSvOuNm3GjBwdkb&index=20
