@@ -1,18 +1,35 @@
 window.addEventListener('load', function() {
-	var a = [10, 20, 30];
+	var listFunc = null;
+	function registerBook(obj)
+	{
+		listFunc = obj.valueCallback;
+		listFunc(5);
+	}
+
+	function callback(value)
+	{
+		console.log(value);
+	}
 
 	function fun()	{
-		for(var i = 0; i < 3; ++i)
-		{
+		registerBook({valueCallback: function(value) {callback(value);}.bind(this)});
 
-			// Solution 2: Wrap up using 1. Anonymous function and 2. Argument passing
-			// (function() { })(); // Anonymous function
-			(function(param) { 
-				setTimeout(function() {
-					console.log(a[param]); // 10 20 30
-				}.bind(this), 100);
-			})(i);
-		}
+		for(var index = 0; index < 6; ++index)
+		{
+			something[index] = { }; // object as context / this
+			something[index].abc = 4;
+			registerBook({ valueCallback: 
+				(function(contextObject) {  // object as context / this
+					return function(value) { 
+						callback.call(contextObject, value);
+							}.bind(this);
+				}.bind(this))(something[index])
+			
+			});
+}
+
+
+
 	}
 
 
