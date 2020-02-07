@@ -1,0 +1,15 @@
+#displayElement {    
+font-size: 200%;
+font-stretch: expanded;
+font-weight: 900;    
+height: 50%;
+color: red;
+}
+
+.numPadSz {
+position: relative;
+display: inline-block;
+width: 150px;
+height: 40px;
+font-weight: bold;
+}
