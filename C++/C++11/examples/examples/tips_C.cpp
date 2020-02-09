@@ -134,6 +134,42 @@ void strcat(char s[], char t[]) {
 	while(s[i] != '\0') i++; // find end of 's'
 	while((s[i++] = t[j++]) != '\0');
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// Binary Search
+int binarySearch(int n, int x, int v[]) {
+	int low, mid, high;
+	low = 0;
+	high = n - 1;
+	while(low <= high) {  					// Note: <=
+		mid = (low + high) / 2;
+		if(x < v[mid]) high = mid - 1; 		// Note: -1
+		else if(x > v[mid]) low = mid + 1;  // Note: +1
+		else return mid; // match found and return the index
+	}
+	return -1;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Reverse the string 's' in place
+void reverse(char s[]) {
+	int c, i, j;
+	for(i = 0, j = strlen(s) - 1; i < j; ++i, --j) // PatternNote: strlen(s) - 1 (or) array[n] - 1 
+			c = s[i], s[i] = s[j], s[j] = c; // Left to Right
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// atoi: convert string 's' to integer
+int atoi(char s[]) {
+	int i, n = 0;
+	for(i = 0; s[i] >= '0' && s[i] <= '9'; ++i)
+		n = n * 10 + (s[i] - '0'); // Note: n = n*10 + ()
+	return n;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// atoi: convert integer to string 's'
+void itoa(int n, char s[]) {
+	do { // generate digits in reverse order
+		s[i] = n % 10 + '0'; // Last digit extracted
+		n = n / 10; // Delete the last digit
+	}while(n);
+	s[i] = '\0';
+	reverse(s); // reverse the digits	
+}
