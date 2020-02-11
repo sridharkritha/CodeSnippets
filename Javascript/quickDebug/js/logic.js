@@ -1,6 +1,6 @@
 window.addEventListener('load', function() {
 	function fun()	{
-		var thisSridhar = { }; // this object named sridhar
+		var thisSridhar = { }; // 'this' object named sridhar
 
 		thisSridhar.someFunction = function () {
 			thisKavitha.registerBook( {
