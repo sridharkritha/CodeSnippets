@@ -10,8 +10,15 @@
 // Assignment expression evaluated RIGHT to LEFT
 	a = b = c = 0; // RIGHT to LEFT
 	a = (b = (c = 0)); 
+
+// Assignment and relative operator
+	while((n /= 10) > 0) { }
+
 // Bitwise operation
-if((x & MASK) == 0) // '==' has Higher precedence than '&'
+	if((x & MASK) == 0) // '==' has Higher precedence than '&'
+
+// sizeof array and relative operator
+	for(int i = 0; i < sizeof v / sizeof v[0]; ++i) { }
 
 // Mixed precedence
 for(i = 0; i < lim-1 && (c = getchar())!= EOF && c!='\n'; ++i)
@@ -43,6 +50,8 @@ for(i = 0; i < lim-1 && (c = getchar())!= EOF && c!='\n'; ++i)
   a *= b + 1;
   a = a * (b + 1); // Correct
   a = a * b + 1; // Wrong
+
+ 
 
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,6 +157,36 @@ int binarySearch(int n, int x, int v[]) {
 	}
 	return -1;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+void swap(int v[], int i, int j) {
+	int temp;	
+	temp = v[i], v[i] = v[j], v[j] = temp; // Left to Right
+}
+
+// Step 1: One element is chosen - partition element(p).
+// Step 2: Remaining elements are partitioned into 2 subsets - those less than 'p' and greater than EQUAL to 'p'.
+// Step 3: Repeat the same process for the subsets. STOP once subset has only ONE element - NO need to sort.
+void qsort(int v[], int left, int right) {
+	int i, last;
+	if (left >= right) return; // do nothing if array contains less than 2 elements[1 element - NO need to sort]
+	swap(v, left, (left + right) / 2); // move partition element(p) to v[0]
+	last = left;
+	for (i = left + 1; i <= right; ++i) {	// partition
+		if (v[i] < v[left]) swap(v, ++last, i);
+	}
+	swap(v, left, last); // restore partition element.
+	qsort(v, left, last - 1);
+	qsort(v, last + 1, right);
+}
+
+int main() {
+	int v[3] = { 4, 1, 5};
+	qsort(v, 0, sizeof v / sizeof v[0] - 1); // qsort(v,0, 2) - NOTE: -1
+	for(int i = 0; i < sizeof v / sizeof v[0]; ++i) // arraySize =  sizeof v / sizeof v[0]
+	cout << v[i];
+	return 0;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Reverse the string 's' in place
 void reverse(char s[]) {
@@ -163,13 +202,38 @@ int atoi(char s[]) {
 		n = n * 10 + (s[i] - '0'); // Note: n = n*10 + ()
 	return n;
 }
+
+// Fast Version:
+int fast_atoi(const char* s) {
+	int n = 0;
+	while(*s) n = n * 10 + (*s++ - '0');
+	return n;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// atoi: convert string 's' to double
+double atoi(char s[]) {
+	int i;
+	double n = 0.0, power = 1.0;
+	for(i = 0; s[i] >= '0' && s[i] <= '9'; ++i)
+		n = n * 10.0 + (s[i] - '0'); // Note: n = n*10 + ()
+	if(s[i] == '.') ++i;
+	for(power = 1.0; s[i] >= '0' && s[i] <= '9'; ++i) {
+		n = n * 10.0 + (s[i] - '0');
+		power *= 10.0;
+	}
+	return n/power;
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 // atoi: convert integer to string 's'
 void itoa(int n, char s[]) {
 	do { // generate digits in reverse order
-		s[i] = n % 10 + '0'; // Last digit extracted
-		n = n / 10; // Delete the last digit
-	}while(n);
+		s[i++] = n % 10 + '0'; // Last digit extracted
+		// n = n / 10; // Delete the last digit
+	}while((n /= 10) > 0);
 	s[i] = '\0';
 	reverse(s); // reverse the digits	
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
