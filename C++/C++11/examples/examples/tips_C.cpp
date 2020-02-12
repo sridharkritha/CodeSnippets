@@ -170,7 +170,7 @@ void swap(int v[], int i, int j) {
 void qsort(int v[], int left, int right) {
 	int i, last;
 	if (left >= right) return; // do nothing if array contains less than 2 elements[1 element - NO need to sort]
-	swap(v, left, (left + right) / 2); // move partition element(p) to v[0]
+	swap(v, left, (left + right) / 2); // middle element is chosen for partition. Move partition element(p) to v[0]. 
 	last = left;
 	for (i = left + 1; i <= right; ++i) {	// partition
 		if (v[i] < v[left]) swap(v, ++last, i);
