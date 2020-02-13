@@ -14,8 +14,15 @@
 // Assignment and relative operator
 	while((n /= 10) > 0) { }
 
-// Bitwise operation
+// Bitwise operation (&)
 	if((x & MASK) == 0) // '==' has Higher precedence than '&'
+
+// Uninary operator( &, *) binds more tightly than Arithmetic operators
+	y = *ip + 1; // (*ip) + 1; increments the VALUE by 1 pointed by an pointer ip.
+	*ip += 1; // *ip = (*ip) + 1; VALUE increment by 1
+	++*ip; // ++(*ip); Also same as *ip += 1; VALUE increment by 1
+	*ip++; // *(ip++); NOTE: ADDRESS incremented NOT value. Both [*, ++] have SAME precedence and [RIGHT to LEFT] associative applies.
+	(*ip)++; // VALUE increment by 1
 
 // sizeof array and relative operator
 	for(int i = 0; i < sizeof v / sizeof v[0]; ++i) { }
@@ -234,6 +241,53 @@ void itoa(int n, char s[]) {
 	reverse(s); // reverse the digits	
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Macro Substitution:
+
+#define SQUARE(S)	S * S
+x = SQUARE(z + 1);
+x = z + 1 * z + 1; // WRONG - Use brackets
+
+#define MAX(A, B)	( (A) > (B) ? (A) : (B) )
+x = MAX( p+q, r+s);
+x = ( (p+q) > (r+s) ? (p+q) : (r+s) ); // OK
+
+BUT macro substitutions are NOT suitable for SIDE EFFECT expression such as increment operator, input or output.
+
+x = MAX(i++, j++); // WRONG - will increment the LARGER number twice.
+
+#define DPRINTF(expr)	printf("expr=%g\n", expr)
+DPRINTF(x/y);
+printf("expr=%g\n", x/y); // WRONG - Substitutions WOULDN'T work within quotes. Use #
+
+#:
+#define DPRINTF(expr)	printf(#expr      "=%g\n", expr)
+DPRINTF(x/y);
+printf("x/y"     "=%g\n", x/y); // step 1: Substitution
+printf("x/y=%g\n", x/y);        // step 2: Strings will concatenated automatically
+
+##:
+#define PASTE(front, back)	front       ##             back
+s = PASTE(name, 9); // white spaces are removed and then concatenated
+s = name9;
+
+Conditional Inclusion:
+// header.h
+#ifndef HDR
+#define HDR
+	// Contents of header.h go here
+#endif
+////////////////////////////////////////////////////////////////////////////////////////////////////
+Pointer:
+& operator ONLY applies to object in MEMORY: variables and array elements. It CANNOT be applied to
+expressions, constants or register variables.
+
+int *ip; // Expression *ip is an int [or] Pointer to int
+double *dp, atoi(char *); // *dp Pointer to double, atoi returns double(NOT pointer) which has argument Pointer to char
+
+
+
+
+
 
 
 
