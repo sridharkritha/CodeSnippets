@@ -21,8 +21,15 @@
 	y = *ip + 1; // (*ip) + 1; increments the VALUE by 1 pointed by an pointer ip.
 	*ip += 1; // *ip = (*ip) + 1; VALUE increment by 1
 	++*ip; // ++(*ip); Also same as *ip += 1; VALUE increment by 1
+	
 	*ip++; // *(ip++); NOTE: ADDRESS incremented NOT value. Both [*, ++] have SAME precedence and [RIGHT to LEFT] associative applies.
 	(*ip)++; // VALUE increment by 1
+
+	*++ip; // Increment ip to next object first and then get the value from the new location
+
+// Standard Idioms for pushing and popping a stack.
+	*p++ = val; // push val onto stack
+	val = *--p; // pop top of stack into val
 
 // sizeof array and relative operator
 	for(int i = 0; i < sizeof v / sizeof v[0]; ++i) { }
@@ -58,7 +65,102 @@ for(i = 0; i < lim-1 && (c = getchar())!= EOF && c!='\n'; ++i)
   a = a * (b + 1); // Correct
   a = a * b + 1; // Wrong
 
+  // Pointer and Array:
+  // Similarities
+  int a[10];
+  int *pa;
+  pa = &a[0];
+  pa = a; // same as above
+  int k = 2;
+  cout << &a[k]; // address of location 2
+  cout << a+k; // same as above
+  cout << a[i];
+  cout << *(a+i); // same as above
+
+  // Difference : 1
+  pa = a;
+  pa++; // Legal - moving to next location 
+  a++;  // ILLEGAL - You CANN'T increment the array name
+
+  Automatic conversion of array Name into Pointer:
+  If you pass the array to a function, what is passed is the LOACATION of the first element - that is a POINTER.
+  Example:
+  // strlen (ver. 1): return length of string s
+  int strlen(char *s) {
+	  for(int n = 0; *s != '\0'; s++) ++n; // s is a pointer NOT a array NAME. so you can increment
+	  return n;
+  }
+
+  // Note: Below 2 forms both are same
+  int strlen(char *s)  { }
+  int strlen(char s[]) { }
  
+ List of possible callers are
+ strlen("Hello Muthu Raman"); // string CONSTANT
+ strlen(array); // char array[100]; character ARRAY
+ strlen(ptr); // char *ptr
+
+ Pointer Arithmetic:
+ If 'p' and 'q' points to elements of the 'same array' and 'p < q' then 'q - p + 1' (No. of elements from 'p' to 'q' both inclusive)
+  // strlen (ver. 2): return length of string s (using pointer arithmetic)
+    int strlen(char *s) {
+	  char *p = s;
+	  while(*p) p++; //  while(*p != '\0') p++; // while automatically take care of 'null' check
+	  return p - s;
+  }
+
+  // Difference : 2
+  A string CONSTANT, written as "I am a string" - is an array of character with '\0' termination. So length is ONE more than
+  the number of characters between the double quotes.
+
+  char ary[] = "I am a string"; // ary - Array HOLDS sequence of characters + '\0'
+  char *ptr  = "I am a string"; // ptr - Pointer which POINTS to a string CONSTANT(READ ONLY sequence of characters + '\0').
+								// ptr - Here the ASSIGNMENT is NOT a string copy; only pointers are involved.
+
+  ary - Individual characters within the array may be changed. But 'ary' always refer to the same storage.
+  ptr - ptr can me moved to point some other location. But the result is undefined if you modify the string content.
+
+	strcpy(s,t): copy t to s.
+	It would be nice just to have t = s but this copies the pointer, NOT the characters. To copy the characters, we need a loop.
+  // strcpy (ver. 1- array subscript version): copy t to s
+  void strcpy(char *s, char *t) {
+	  int i = 0;
+	 while(s[i] = t[i]) ++i; // while((s[i] = t[i]) != '\0') ++i;
+  }
+
+// strcpy (ver. 2- pointer version): copy t to s
+  void strcpy(char *s, char *t) {
+	 while((*s = *t) != '\0') {
+		 s++;
+		 t++;
+	 }
+  }
+
+// strcpy (ver. 2- pointer version MORE simplified): copy t to s
+  void strcpy(char *s, char *t) {
+	 // Standard Idiom with '=' 
+	 while(*s++ = *t++); // value of '*t++' is the character that 't' pointed to before 't' was incremented.
+  }
+
+  String lexicographic compare: 
+  // strcmp: negative if s<t, 0 if s==t, positive if s>t
+  int strcmp(char *s, chat *t) {
+	  int i = 0;
+	  for(i = 0; s[i] == t[i]; ++i) {
+		  if(s[i] == '\0') return 0;
+	  }
+	  return s[i] - t[i];
+  }
+
+    // strcmp (Ver 2 - pointer version): negative if s<t, 0 if s==t, positive if s>t
+  int strcmp(char *s, chat *t) {
+	  for( ; *s == *t; s++, t++) {
+		  if(*s == '\0') return 0;
+	  }
+	  return *s - *t;
+  }
+
+
 
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
