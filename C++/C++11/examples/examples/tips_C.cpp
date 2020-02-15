@@ -152,7 +152,7 @@ for(i = 0; i < lim-1 && (c = getchar())!= EOF && c!='\n'; ++i)
 	  return s[i] - t[i];
   }
 
-    // strcmp (Ver 2 - pointer version): negative if s<t, 0 if s==t, positive if s>t
+// strcmp (Ver 2 - pointer version): negative if s<t, 0 if s==t, positive if s>t
   int strcmp(char *s, chat *t) {
 	  for( ; *s == *t; s++, t++) {
 		  if(*s == '\0') return 0;
@@ -160,7 +160,78 @@ for(i = 0; i < lim-1 && (c = getchar())!= EOF && c!='\n'; ++i)
 	  return *s - *t;
   }
 
+  // POINTER TO AN ARRAY 
+  int m[][3]  = {{0, 1, 2}, {3, 4, 5}};
+  int (*m)[3] = {{0, 1, 2}, {3, 4, 5}};
 
+Multi-dimensional array Vs Array of Pointer [preferred]:
+2d array:
+int m[2][3] = { {0, 1, 2},
+				{3, 4, 5} };
+// POINTER TO AN ARRAY of rows, where each row is an array of 3 ints
+int m[][3] = {  {0, 1, 2},		// row is Optional
+				{3, 4, 5} };	
+int (*m)[3] = { {0, 1, 2},	 // () must bcos [] have higher precedence.
+				{3, 4, 5} }; // without () => WRONG meaning => int *a[3] - ARRAY OF 13 POINTERS to integers
+
+Array of Pointers: Commonly used for storing the 'character strings of diverse lengths'.
+int m[2][3]; // multi-dimen array. 2x3 = 6 int fixed sized location has been reserved.
+// m[row][col] = 3 x row + col; Can be used to locate the elements 
+int *a[2];  // array of pointer. 2 pointers location has been reserved. 
+			// Advantage - Row of array may be of DIFFERENT length. Some points to 3 element array or 100 element array or none at all.
+			// Suppose each element of 'a' point to a 3 element array then [2x3 = 6 int sized location + 2 cells for the pointer has been allocated]
+
+2d array form:
+char month[][3] = { "Jan", "fe", "m", "a", "may"}; // 5x3 = 15 allocation
+Array of Pointers form:
+char *month[] =   { "Jan", "fe", "m", "a", "may"}; // 5 pointer cells allocation + 5x3 = 15 allocation
+// month in 'char *month[]' is array name NOT a pointer so you cann't increment the name month
+
+Pointer to Array of Pointers:
+Command line argument 'char *argv[]' is a - Pointer(p) to an array of pointers(aps). 
+Here 'argv' is NOT a array NAME it is a pointer you can increment it.
+
+// echo.cc - echo the command line arguments. 
+// echo hello world sridhar
+// hello world sridhar
+// Ver 1: Keep the Pointer(p) unchanged but manipulate the array index of (aps).
+int main(int argc, char *argv[]) {
+	for(int i = 1; i < argc; ++i) printf("%s%s", argv[i], (i < argc-1) ? " ": ""); // hello world sridhar
+}
+
+// Ver 2: Keep the the Array index of (aps) unchanged but manipulate the Pointer(p).
+int main(int argc, char *argv[]) {
+	for(int i = 1; i < argc; ++i) printf("%s%s", *++argv, (i < argc-1) ? " ": ""); // hello world sridhar
+}
+
+// Print the first characters of each strings
+int main(int argc, char *argv[]) {
+	for (int i = 1; i < argc; ++i) cout << (*++argv)[0] << " "; // h w s
+}
+
+// Print the first 3 characters of each strings
+int main(int argc, char *argv[]) {
+	// Must - For moving the pointer from first character of one string to first character next string
+	cout << (*++argv)[0]; // h
+	for(int i = 0; i < 3; ++i) cout << *++argv[0] << " "; // e l l
+
+	cout << (*++argv)[0]; // w
+	for (int i = 0; i < 3; ++i) cout << *++argv[0] << " "; // o r l
+}
+
+argv -----> p0-----> echo
+			p1-----> hello 
+			p2-----> world
+			p3-----> sridhar
+cout << *++argv; // hello NOT echo bcos it increments first.
+
+Summary:
+*++argv      - On each call it moves to next STRING
+(*++argv)[0] - On each call it moves to next STRING and extract the FIRST character.
+**++argv     - Same as above.
+*++argv[0]	 - On each call it moves from '2nd' CHARACTER to next CHARACTER within the SAME string. It is only valid after '(*++argv)[0]'.
+*++(argv[0]) - Same as above. [] binds tighter than * and ++ so () is optional.
+			 - In the above expression, the increments are happening for the 'pointer argv[0]'
 
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
