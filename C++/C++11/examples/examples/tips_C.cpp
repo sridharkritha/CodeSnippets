@@ -65,6 +65,14 @@ for(i = 0; i < lim-1 && (c = getchar())!= EOF && c!='\n'; ++i)
   a = a * (b + 1); // Correct
   a = a * b + 1; // Wrong
 
+  // Pointer:
+& operator ONLY applies to object in MEMORY: variables and array elements. It CANNOT be applied to
+expressions, constants or register variables.
+
+int *ip; // Expression *ip is an int [or] Pointer to int
+double *dp, atoi(char *); // *dp Pointer to double, atoi returns double(NOT pointer) which has argument Pointer to char
+
+
   // Pointer and Array:
   // Similarities
   int a[10];
@@ -497,13 +505,60 @@ Conditional Inclusion:
 #define HDR
 	// Contents of header.h go here
 #endif
-////////////////////////////////////////////////////////////////////////////////////////////////////
-Pointer:
-& operator ONLY applies to object in MEMORY: variables and array elements. It CANNOT be applied to
-expressions, constants or register variables.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Structure:
+without structure tag:
+struct { int x; int y;} a, b, c;
+int a, b, c;
 
-int *ip; // Expression *ip is an int [or] Pointer to int
-double *dp, atoi(char *); // *dp Pointer to double, atoi returns double(NOT pointer) which has argument Pointer to char
+with structure tag:
+struct point { int x; int y;};
+
+int a, b, c;
+struct point a, b, c;
+
+structure initializer:
+struct point a = {10, 20};
+
+Structure inside an another structure:
+struct rectangle {
+	struct point pt1;
+	struct point pt2;
+};
+
+struct rectange screen;
+screen.pt1.x = 100;
+
+Pointer to Structure:
+struct point origin, *sp;
+sp = &origin;
+cout << origin.x;
+cout << (*sp).x; // '.' higher precedence than '*'. Also *sp.x = *(sp.x) = illegal access/meaningless
+cout << sp->x; // same as above but prefered way of writing.
+
+struct rectangle screen, *sp = &screen;
+cout << screen.pt1.x;
+cout << (screen.pt1).x;
+cout << sp->pt1.x; // Both '.' and '->' are top of precedence hierarchy. Associate from LEFT to RIGHT
+cout << (sp->pt1).x;
+
+More Examples:
+struct { int len; char *str } *p;
+++p->len; // increments len, NOT p
+++(p->len); // same as above
+(++p)->len; // increments 'p' before accessing 'len'
+(p++)->len; // access 'len' and then increment 'p'
+p++->len; // same as above
+
+*p->str; // fetches wathever str points to
+*p->str++; // increments 'str' and then access what it points to
+(*p->str)++; // increments the content which is pointed by str.
+*p++->str; // accessing whatever 'str' points to and then increment 'p'.
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 
 
