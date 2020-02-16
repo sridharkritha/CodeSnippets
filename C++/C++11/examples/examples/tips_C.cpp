@@ -367,6 +367,54 @@ int main() {
 	cout << v[i];
 	return 0;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// Generic swap can be used for both numeric and string
+void swap(void *v[], int i, int j) {
+	void * temp;
+	temp = v[i];
+	v[i] = v[j];
+	v[j] = temp;
+}
+
+// strcmp (Ver 2 - pointer version): negative if s<t, 0 if s==t, positive if s>t
+  int strcmp(char *s, chat *t) {
+	  for( ; *s == *t; s++, t++) {
+		  if(*s == '\0') return 0;
+	  }
+	  return *s - *t;
+  }
+
+  int numcmp(char *s, char *t) {
+	  double a, b;
+	  a = atof(s); b = atof(t);
+	  if(a < b)			return -1;
+	  else if ( a > b)	return 1;
+	  else				return 0;
+  }
+
+void qsort(int *v[], int left, int right, int (*cmp)(void *, void *)) {
+	int i, last;
+	if (left >= right) return; // do nothing if array contains less than 2 elements[1 element - NO need to sort]
+	swap(v, left, (left + right) / 2); // middle element is chosen for partition. Move partition element(p) to v[0]. 
+	last = left;
+	for (i = left + 1; i <= right; ++i) {	// partition
+		if ((*cmp)(v[i], v[left]) < 0) // Numeric or String Comparision function
+			swap(v, ++last, i);
+	}
+	swap(v, left, last); // restore partition element.
+	qsort(v, left, last - 1);
+	qsort(v, last + 1, right);
+}
+
+char *linePtr[]; // lines of string. String content may also full of numbers.
+qsort((void **) linePtr, 0, nLines-1, (int (*)(void *, void *)) (isNumber ? numcmp : strcmp));
+
+Note: int (*cmp)(void *, void *)
+cmp  - is a Pointer to a funtion which takes 2 void * arguments
+*cmp - is the function
+
+Note: int *cmp(void *, void *)
+cmp - is a function which return  a pointer to an int. (DIFFERENT meaning!)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Reverse the string 's' in place
 void reverse(char s[]) {
