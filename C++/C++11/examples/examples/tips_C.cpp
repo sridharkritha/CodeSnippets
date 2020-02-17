@@ -94,12 +94,12 @@ double *dp, atoi(char *); // *dp Pointer to double, atoi returns double(NOT poin
   If you pass the array to a function, what is passed is the LOACATION of the first element - that is a POINTER.
   Example:
   // strlen (ver. 1): return length of string s
-  int strlen(char *s) {
+  int strlen(char *s) {						// strlen excludes the '\0' from the count
 	  for(int n = 0; *s != '\0'; s++) ++n; // s is a pointer NOT a array NAME. so you can increment
 	  return n;
   }
 
-  // Note: Below 2 forms both are same
+  // Note: Below 2 forms both are the same
   int strlen(char *s)  { }
   int strlen(char s[]) { }
  
@@ -332,7 +332,7 @@ void strcat(char s[], char t[]) {
 	while((s[i++] = t[j++]) != '\0');
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Binary Search
+// Binary Search - Number search
 int binarySearch(int n, int x, int v[]) {
 	int low, mid, high;
 	low = 0;
@@ -344,6 +344,21 @@ int binarySearch(int n, int x, int v[]) {
 		else return mid; // match found and return the index
 	}
 	return -1;
+}
+
+// Binary Search - String search and Pointer to Structure
+struct key *binarySearch(int n, char *word, struct key *arr) {
+	int cond;
+	struct key *low = &arr[0];
+	struct key *high = &arr[n]; // NOT n-1. PAST the end of the array. Pointing to next element end of the array. Illegal but VALID.
+	struct key *mid;
+	while(low < high) {  										// NOT <=
+		mid = low + (high-low) /2 ; // mid = (low + high) / 2; - is WRONG bcos you should NOT ADD 2 pointers but you can SUBTRACT.
+		if((cond = strcmp(word, mid->word)) < 0) high = mid;	// NOT mid - 1; 
+		else if(cond > 0) low = mid + 1;						// Note: +1
+		else return mid; // match found and return the index
+	}
+	return NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -529,7 +544,7 @@ struct rectangle {
 struct rectange screen;
 screen.pt1.x = 100;
 
-Pointer to Structure:
+Pointer to Structure / Structure Pointer (Both are the same):
 struct point origin, *sp;
 sp = &origin;
 cout << origin.x;
@@ -554,6 +569,51 @@ p++->len; // same as above
 *p->str++; // increments 'str' and then access what it points to
 (*p->str)++; // increments the content which is pointed by str.
 *p++->str; // accessing whatever 'str' points to and then increment 'p'.
+
+Array of Structures:
+struct key { char *word; int count; } keyArr[NKEYS];
+
+struct key { char *word; int count; };
+struct key keyArr[NKEYS];
+
+struct key { char *word; int count; } keyArr[] = { {"const", 0}, {"case", 0}, {"while", 0} };
+struct key { char *word; int count; } keyArr[] = { "const", 0, "case", 0, "while", 0 }; // inner braces are optional
+
+Compile time calculation of Array size:
+#define NKEYS	sizeof keyArr / sizeof struct key;
+#define NKEYS	sizeof keyArr / sizeof keyArr[0]; // Prefered bcos it can be used even if the there an type change.( struct to primitive types)
+
+NOTE: Preprocessor DON'T know anything about sizeof. So it should NOT used in a #if. #define is NOT evaluated by preprocessor. So it's OK.
+
+Recurrsive Structure Declaration:
+struct node {
+	// struct node left; // ERROR  - Illegal for a structure to contain an instance of itself.
+	struct node *left;   // OK - left pointer points to a node.
+}
+
+Otherway of writting recurrsive structure declaration:
+struct node {
+	struct A *a; // a points to A
+}
+
+struct A {
+	struct node *n; // n points to node
+}
+
+Memory allocation:
+// Duplicate of string s
+char *strdup(char *s) {
+	char *p = (char *) malloc(strlen(s) + 1); // +1 for '\0'
+	if(p) strcpy(p,s);
+	return p;
+}
+
+// make a new node
+struct node *create() {
+	return (struct node *) malloc(sizeof struct node);
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
