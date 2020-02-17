@@ -1,33 +1,58 @@
 window.addEventListener('load', function() {
 	function fun()	{
-		var thisSridhar = { }; // 'this' object named sridhar
+//******************************************************************* thisSridhar (context) *************************************************************************************
+		var thisSridhar = { }; // 'this' object named as sridhar
+		thisSridhar.name = "thisSridhar";
+		
+		thisSridhar.noArgmentedFun = function() {
+			console.log("noArgmentedFun()");
+		};
 
-		thisSridhar.someFunction = function () {
-			thisKavitha.registerBook( {
-				"callback_without_arg": 
-					thisKavitha.noArgmentedFun, // calledby: NOTHING
-				"callback_with_arg": function(value) {
-					thisKavitha.argmentedFun(value); // calledby: withArg(999);, calls: function argmentedFun(value) { } 
-									  }
-			});
+		thisSridhar.argmentedFun = function(value) {
+			console.log(value);
+		};
 
-			thisSridhar.thisSridharSubObjects = []; // collection of 'this' objects inside an object
-			for(var index = 0; index < 6; ++index) {
-				thisSridhar.thisSridharSubObjects[index] = { }; // creates DIFFERENT 'this' objects
+		thisSridhar.argmentedFunWithContext = function(value) {
+			console.log(this.abc * value); // NOTE: this object
+		};
+
+		thisSridhar.someFunction = function () 
+		{
+			thisKavitha.registerBook({
+										"callback_without_arg":
+																this.noArgmentedFun, // calledby: NOTHING
+										"callback_with_arg": 
+															function(value) {
+																this.argmentedFun(value); // calledby: thisKavitha.withArg(999); BUT 'this === thisSridhar' NOT 'thisKavitha' bcos bind.
+																						  // calls: thisSridhar.argmentedFun = function(value) { { } 
+															}.bind(this) // bind - MUST. NOTE: Here 'this == thisSridhar' 
+									});
+
+			this.thisSridharSubObjects = []; // collection of 'this' objects inside an object
+
+			for(var index = 0; index < 1; ++index) 
+			{
+				this.thisSridharSubObjects[index] = { }; // creates DIFFERENT 'this' objects
+				this.thisSridharSubObjects[index].name = "thisSridharSubObjects_"+index;
 				this.thisSridharSubObjects[index].abc = index; // this === thisSridhar, bcos caller is 'thisSridhar.someFunction();'
-				thisKavitha.registerBook({ "callback_with_arg_with_context": 
-					(function(contextObject) {  // object as context / this
-							return function(value) {
-								thisKavitha.argmentedFunWithContext.call(contextObject, value);
-										};
-					}.bind(this))(this.thisSridharSubObjects[index]) // IIF- passing different 'this' object from thisSridharSubObjects[index]
-				});
+				
+				thisKavitha.registerBook({ 
+											"callback_with_arg_with_context": 
+														(function(contextObject) {  // object as context / this
+																return function(value) {
+																	 			// 'this == thisSridhar' and 'contextObject == thisSridharSubObjects_1'
+																				this.argmentedFunWithContext.call(contextObject, value);
+																		}.bind(this); // bind - MUST. NOTE: Here 'this == thisSridhar'
+														}.bind(this))(this.thisSridharSubObjects[index]) // IIF- passing different 'this' object from thisSridharSubObjects[index]
+										});
 			}
 
 			thisKavitha.print();
 	};
 
+//******************************************************************* thisKavitha (context) *************************************************************************************
 	var thisKavitha = { };
+	thisKavitha.name = "thisKavitha";
 	thisKavitha.index = 0;
 	thisKavitha.withCtxArg = [];
 
@@ -42,145 +67,24 @@ window.addEventListener('load', function() {
 
 	thisKavitha.print = function() {
 		setTimeout(function() {
-			this.withoutArg(); // directly calls 'function noArgmentedFun(value) { }'
+				this.withoutArg();			// directly calls 'thisSridhar.noArgmentedFun = function() { }'
 
-			thisKavitha.withArg(999); // calls: 'argmentedFun(value)' inside function wrapper;
-						  // NOT directly calls the definition 'function argmentedFun(value) { }'
+				thisKavitha.withArg(999);	// calls: 'this.argmentedFun(value);' inside the function wrapper;
+											// NOT directly calls the definition 'thisSridhar.argmentedFun = function(value) { }'
 
-			for(var i = this.index -1; i>= 0; --i) {
-				this.withCtxArg[i](10); // calls: argmentedFunWithContext.call(contextObject, value) inside function wrapper; 
-									// which inturns call the definition 'function argmentedFunWithContext(value) { }'
-									// NOT directly calls 'function argmentedFunWithContext(value) { }'
+				for(var i = this.index -1; i>= 0; --i) {
+					this.withCtxArg[i](10); // calls: this.argmentedFunWithContext.call(contextObject, value) inside function wrapper; 
+											// which in turns call the definition 'thisSridhar.argmentedFunWithContext = function(value)  { }'
+											// NOT directly calls 'thisSridhar.argmentedFunWithContext = function(value)  { }'
 			}
-		}.bind(thisKavitha), 5000);
-	}
+		}.bind(thisKavitha), 1000);
+	};
 
-	thisKavitha.noArgmentedFun = function() {
-		console.log("noArgmentedFun()");
-	}
-
-	thisKavitha.argmentedFun = function(value) {
-		console.log(value);
-	}
-
-	thisKavitha.argmentedFunWithContext = function(value) {
-		console.log(this.abc * value); // NOTE: this object
-	}
 
 
 	//////////////////////////////////////
 	thisSridhar.someFunction();
 }
-
-
-
-
-/*
-	var withoutArg = null;
-	var withArg = null;
-	var withCtxArg = [];
-	var index = 0;
-
-	function registerBook(obj)
-	{
-		if(obj.callback_without_arg)
-			withoutArg = obj.callback_without_arg;
-		if(obj.callback_with_arg)
-			withArg = obj.callback_with_arg;
-		if(obj.callback_with_arg_with_context)
-			withCtxArg[index++] = obj.callback_with_arg_with_context;
-	}
-
-	function print() {
-		setTimeout(function() {
-			withoutArg(); // directly calls 'function noArgmentedFun(value) { }'
-
-			withArg(999); // calls: 'argmentedFun(value)' inside function wrapper;
-						  // NOT directly calls the definition 'function argmentedFun(value) { }'
-
-			for(var i = index -1; i>= 0; --i) {
-				withCtxArg[i](10); // calls: argmentedFunWithContext.call(contextObject, value) inside function wrapper; 
-									// which inturns call the definition 'function argmentedFunWithContext(value) { }'
-									// NOT directly calls 'function argmentedFunWithContext(value) { }'
-			}
-		}, 5000);
-	}
-
-	function noArgmentedFun() {
-		console.log("noArgmentedFun()");
-	}
-
-	function argmentedFun(value) {
-		console.log(value);
-	}
-
-	function argmentedFunWithContext(value) {
-		console.log(this.abc * value); // NOTE: this object
-	}
-
-
-	function fun()	{
-		registerBook({
-						"callback_without_arg": 
-												noArgmentedFun, // calledby: NOTHING
-						"callback_with_arg": function(value) {
-												argmentedFun(value); // calledby: withArg(999);, calls: function argmentedFun(value) { } 
-												}
-					 });
-
-
-		var something = [];
-
-		for(var index = 0; index < 6; ++index) {
-				something[index] = { }; // creates DIFFERENT this objects
-				something[index].abc = index;
-				registerBook({ "callback_with_arg_with_context": 
-					(function(contextObject) {  // object as context / this
-							return function(value) {
-											argmentedFunWithContext.call(contextObject, value);
-										};
-					}.bind(this))(something[index]) // IIF- passing different 'this' object from something[index]
-				});
-		}
-
-					 print();
-
-					//  for(var index = 0; index < 6; ++index)
-					//  {
-					// 	 something[index] = { }; // object as context / this
-					// 	 something[index].abc = index;
-					// 	 registerBook({ "callback_with_arg_with_context": 
-					// 		 (function(contextObject) {  // object as context / this
-					// 			 return function(value) { 
-					// 				argmentedFunWithContext.call(contextObject, value);
-					// 					 }.bind(this);
-					// 		 }.bind(this))(something[index])
-					// 	 });
-					//  }
-	}
-
-	*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	// button
 	document.getElementById('btnIdPrevious').onclick = function () { 
