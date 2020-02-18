@@ -613,6 +613,87 @@ struct node *create() {
 	return (struct node *) malloc(sizeof struct node);
 }
 
+Typedef: Creates a new data type name for the existing type.
+typedef int Length; // Note: Capitial Letter
+Length maxLen;		// int maxLen;
+Length *lengths[];  // int *lengths[]
+
+typedef char *String;
+String p, linePtr[MAXLINES]; // char *p, *linePtr[MAXLINES]
+int strcmp(String, String);
+p = (String) malloc(100);
+
+typedef struct node {
+	struct node *left;
+} TreeNode; // 'TreeNode' is a new type node 'struct node'
+
+typedef struct node *TreePtr; // 'TreePtr' is a new type name for 'struct node *' (Pointer to the structure)
+
+// make a new node
+TreePtr create() {
+	return (TreePtr) malloc(sizeof TreeNode);
+}
+
+// typedef as textual substitution:
+typedef int (*PF) (char *, char *); // Creates a new type name PF, for 'pointer to function of 2 char* argumements returning int'
+
+int strcmp(char *, char *);
+int numcmp(char *, char *);
+
+PF strcmp, numcmp;
+
+Union inside a Structure:
+struct {
+	union {
+		char *str;
+	}u;
+}sArr[NUM];
+// Access the first character of str;
+cout << sArr[i].u.str[0];
+cout << *sArr[i].u.str;
+
+// Structure Initialization:
+struct one { int a;  int b; };
+void main(){
+    struct one z1;         // Members in z1 do not have default initial values.
+    static struct one z2;  // z2.a=0, z2.b=0 - Static initialization
+    struct one z3 = {1};   // z3.a=1, z3.b=0 - Partital initialization
+}
+// Union Initialization - Only initialized with a value of the type of its FIRST member.
+union {
+      char name[15]; // ONLY first members can be initialized
+      int age; // Can NOT be initialized
+      float weight;// Can NOT be initialized
+} people = {"Hello Sridhar"};
+
+Bit Fields: Pack several objects into a single machine word.
+#define KEYWORD  01
+#define EXTERNAL 02
+#define STATIC   04
+
+enum { KEYWORD = 01, EXTERNAL = 02, STATIC = 04};
+
+Turn ON: the EXTERNAL and STATIC bits in a flag variable,
+				flag |= EXTERNAL | STATIC;
+Turn OFF:
+				flag &= ~(EXTERNAL | STATIC);
+
+Condition: True if both EXTERNAL and STATIC bits are OFF
+				if((flag & (EXTERNAL | STATIC)) == 0) { }
+
+Alternatively you could use bitfield.
+struct {
+	unsigned int isKeyword  : 1;
+	unsigned int isExternal : 1;
+	unsigned int isStatic   : 1;
+}flag;
+
+Turn ON  : flag.isExternal = flag.isStatic = 1;
+Turn OFF : flag.isExternal = flag.isStatic = 0;
+Condition: if(!flag.isExternal && flag.isStatic ) { }
+
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
