@@ -1,3 +1,128 @@
+#if 1
+// ref: Class Templates
+// https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958208
+#include<iostream>
+using namespace std;
+
+// Implement STACK class ONLY for integers
+class Stack {
+	int m_Buffer[512];
+	int m_Top{ -1 };
+public:
+	void Push(int x) { m_Buffer[++m_Top] = x; }
+
+	void Pop() { --m_Top; }
+
+	int Top() const { return m_Buffer[m_Top]; }
+
+	bool isEmpty() { return m_Top == -1; }
+};
+
+int main() {
+	Stack  s;
+	s.Push(1); s.Push(2); s.Push(3); s.Push(4);
+	while (!s.isEmpty()) {
+		cout << s.Top() << " "; // 4 3 2 1
+		s.Pop(); // Must otherwise stack overflow
+	}
+
+	return 0;
+}
+
+
+
+#else
+// ref: Variadic Templates
+// https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958202
+#include<iostream>
+#include <iomanip> // for std::setprecision()
+#include "Integer.h"
+using namespace std;
+
+
+// In C, printf accepts variable number of args with different types using macro[NOT type safte and don't accept references].
+// In C++, we can implement the same using varadic templates with type safe and also accepts reference parameters.
+
+// Accept the variable number of arguments by initializer list BUT same type
+template<typename T>
+void Print_variableArg_SameType(std::initializer_list<T> args) {
+	// range base for loop
+	for (const auto &x : args) std::cout << x << " ";
+}
+
+// Varadic Template:
+
+// End condition of the recurrsion
+void Print_variableArg_DifferentType() {
+	cout << endl;
+}
+
+/*
+// template parameter pack. 
+template<typename T, typename... Params> // Params - holds list of different Types. T - single element return by recurrsion
+// function parameter pack
+void Print_variableArg_DifferentType(T x, Params... args) { // PASS BY VALUE
+	std::cout << x;
+
+	// () must for arg and Params in sizeof...
+	// cout << sizeof...(args) << " " << sizeof...(Params) << endl; // 3 3, 2 2, 1 1, 0 0
+	if (sizeof...(args) != 0) cout << ",";
+	
+	// 1. recurrsion - helps - has a loop
+	// 2. recurrsion - helps - to access the individual elements [on each call argument reduce by one, that one we can access it directly]
+	Print_variableArg_DifferentType(args...); // loop by recurrsion
+}
+
+
+// template parameter pack. Params holds collection of different Types.
+template<typename T, typename... Params>
+// function parameter pack
+void Print_variableArg_DifferentType(const T &x, const Params&... args) { // PASS BY REFERENCE - const reference
+	std::cout << x;
+
+	// () must for arg and Params in sizeof...
+	// cout << sizeof...(args) << " " << sizeof...(Params) << endl; // 3 3, 2 2, 1 1, 0 0
+	if (sizeof...(args) != 0) cout << ",";
+
+	Print_variableArg_DifferentType(args...); // args... - passing LVALUE NOT RVALUE - so still pass by value !!!
+}
+
+*/
+
+// template parameter pack. Params holds collection of different Types.
+template<typename T, typename... Params>
+// function parameter pack
+void Print_variableArg_DifferentType(T &&x, Params&&... args) { // PASS BY RVALUE REFERENCE - NOT const reference
+	std::cout << x;
+
+	// () must for arg and Params in sizeof...
+	// cout << sizeof...(args) << " " << sizeof...(Params) << endl; // 3 3, 2 2, 1 1, 0 0
+	if (sizeof...(args) != 0) cout << ",";
+
+	Print_variableArg_DifferentType(std::forward<Params>(args)...); // args... - passing RVALUE by Perfect forwarding - Pass by refernce !!!
+}
+
+/*
+// Recurrsive call stack:
+1. Print_variableArg_DifferentType(1, 2.5, 3, "4")
+2. Print_variableArg_DifferentType(2.5, 3, "4")
+3. Print_variableArg_DifferentType(3, "4")
+4. Print_variableArg_DifferentType("4")
+5. Print_variableArg_DifferentType()
+*/
+
+int main() {
+	//Print_variableArg_SameType({ 1,2,3,4}); // NOTE: { } bcos it is an Initializer list
+	//Print_variableArg_SameType({ 1,2.5,3,"4"}); // ERROR: All should be same type
+
+	//Print_variableArg_DifferentType(1,2.5,3,"4" );
+
+	Integer val{ 1 };
+	Print_variableArg_DifferentType(0, val, Integer{ 2 }); // Integer{ 2 } - passing RVALUE
+	return 0;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include<iostream>
 #include <iomanip> // for std::setprecision()
 using namespace std;
@@ -36,7 +161,6 @@ void show() {
 	cout << n;
 	char buffer[n]; // OK
 }
-
 
 template<typename T>
 T Sum_without_nonTypeTempArg(T *pArr, int sz) { // sz - passed by the called
@@ -91,9 +215,10 @@ int main() {
 	 cout << s;
 
 
-	 // Non-type Template Arguments (Passing CONSTANT expressing [some compile time computed constant value])
+	 // Non-type Template Arguments (Passing CONSTANT expression [some compile time computed constant value])
 	 // show<9>(); // 9
 
+	 // CONSTANT expression are 'addresses', 'references', 'integrals', 'nullptr', 'enums'
 	 int i = 9;
 	 // show<i>(); // ERROR: Should be constant
 	 show<sizeof i>(); // 4
@@ -158,3 +283,5 @@ int main() {
 	*/
 	return 0;
 }
+
+#endif
