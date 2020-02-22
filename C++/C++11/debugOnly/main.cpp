@@ -1,9 +1,208 @@
 #if 1
+// ref: Class Templates Explicit Specialization
+// https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958210
+#include<iostream>
+using namespace std;
+
+template<typename T>
+class PrettyPrinter {
+	T *m_pData;
+public:
+	PrettyPrinter(T *data) : m_pData(data){ }
+	void Print() { cout << "{ " << *m_pData << " }" << endl; }
+	T* GetData() { return m_pData; }
+};
+
+// Explict specialization for char*
+template<>
+class PrettyPrinter<char*> {
+	char *m_pData;
+public:
+	PrettyPrinter(char *data) : m_pData(data) { }
+	void Print() { cout << "{ " << m_pData << " }" << endl; } //  *m_pData => m_pData
+	char* GetData() { return m_pData; }
+};
+
+int main() {
+	int i = 5;
+	float f = 1.2;
+	char *s{ "Hello Sridhar" };
+
+	PrettyPrinter<int> obj1(&i);
+	obj1.Print(); 					// { 5 }
+	cout << obj1.GetData() << endl; // 00AFFD20
+	PrettyPrinter<float> obj2(&f);
+	obj2.Print(); 					 // { 1.2 }
+	cout << *obj2.GetData() << endl; // 1.2
+
+	// char* has lot of	PROBLEMS using the generalised class template
+	// LIST OF PROBLEMS WITHOUT USING TEMPLATE SPECIALISATION FOR char*
+	// Case 1: Passing argument issue. Here <T> is T* and (s) is also *s	
+	// PrettyPrinter<char*> obj3(s); // ERROR: can NOT convert argument 1 from 'char *' to 'char **'
+
+	// Case 2: Return type issue
+	PrettyPrinter<char*> obj3(&s);	 // OK: <T> is T* and (&s) is &(*s) = s
+	obj3.Print(); 					 // { Hello Sridhar }
+	cout << *obj3.GetData() << endl; // Hello Sridhar
+	// Return type of GetData() is T*. And 'T' itself 'char*' so return type is *(T*) = T**
+	// char *pData = obj3.GetData(); // ERROR:can NOT convert from 'char **' to 'char *'
+
+	// Case 2: Output issue
+	char *s{ "Hello Sridhar" };
+	PrettyPrinter<char> obj4(s); 	 // OK. NOTE: char* => char
+	obj4.Print(); 					 // { H } - Prints only the first character
+	cout << *obj4.GetData() << endl; // H
+	cout << obj4.GetData() << endl;  // Hello Sridhar
+	char *pData = obj4.GetData();
+	cout << *pData << endl; 		 // H
+	cout << pData << endl; 			 // Hello Sridhar
+	// So we NEED template explicit specialisation.
+
+	// USE EXPLICIT SPECIALISATION FOR char*
+	PrettyPrinter<char*> obj5(s);	 // OK
+	obj5.Print(); 					 // { Hello Sridhar }
+	cout << *obj5.GetData() << endl; // H
+	cout << obj5.GetData() << endl;  // Hello Sridhar
+	char *pData = obj5.GetData();
+	cout << *pData << endl; 		 // H
+	cout << pData << endl; 			 // Hello Sridhar
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#else
 // ref: Class Templates
 // https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958208
 #include<iostream>
 using namespace std;
 
+// Without Class Template
+// Implement STACK class for ANY datat type
+template<typename T, int size> // size is a 'non-type template argument'
+class Stack {
+	int m_Buffer[size];
+	int m_Top{ -1 }; 
+public:
+	// 'T' - Can be user defined type so better go for 'const reference'
+	void Push(const T &x) { m_Buffer[++m_Top] = x; }
+	
+	// void Pop() { --m_Top; }
+	void Pop(); // Definition is outside of a class
+
+	const T& Top() const { return m_Buffer[m_Top]; }
+
+	bool isEmpty() { return m_Top == -1; }
+
+	// Factory Method for creating an instance of a class (Stack)
+	// static Stack Create() { return Stack<T, size>(); } // creates temp object and return by value
+	static Stack Create();
+
+	Stack() = default; // defalut constructor
+	/*
+	Stack(const Stack &obj) { // copy constructor
+		m_Top = obj.m_Top;
+		// <= bcos we are starting from -1 NOT 0
+		for (int i = 0; i <= m_Top; ++i) m_Buffer[i] = obj.m_Buffer[i];
+	}
+	*/
+	Stack(const Stack &obj);
+
+
+};
+
+// Member function outside the class
+template<typename T, int size>
+void Stack<T, size>::Pop() { --m_Top; }
+
+template<typename T, int size>
+Stack<T, size> // Must specify the return type of Stake once again
+Stack<T, size>::Create() { return Stack<T, size>(); }
+
+template<typename T, int size>
+// Stack<T, size>::Stack(const Stack<T, size> &obj) { // NO need to specify the Stack type inside function argument
+Stack<T, size>::Stack(const Stack &obj) { // shorthand declartion is good enough for function argument - const Stack &obj
+	m_Top = obj.m_Top;
+	// <= bcos we are starting from -1 NOT 0
+	for (int i = 0; i <= m_Top; ++i) m_Buffer[i] = obj.m_Buffer[i];
+}
+
+int main() {	
+	// Stack<float, 9>  s; // specify the class type in the form of 'template argument list' for instantiation
+	Stack<float, 9>  s = Stack<float, 9>::Create(); // Instantiate using factory method
+	// Stack<float, 10>  s = Stack<float, 9>::Create(); // ERROR: size should be same. Otherwise created object type is different from expected type.
+	s.Push(1); s.Push(2); s.Push(3); s.Push(4);
+	/*
+	while (!s.isEmpty()) {
+		cout << s.Top() << " "; // 4 3 2 1
+		s.Pop(); // Must otherwise stack overflow
+	}
+	*/
+
+	// create another object using copy constructor
+	auto s2(s); 
+	while (!s2.isEmpty()) {
+		cout << s2.Top() << " "; // 4 3 2 1
+		s2.Pop(); // Must otherwise stack overflow
+	}
+
+	return 0;
+}
+
+/*
+// Without Class Template
 // Implement STACK class ONLY for integers
 class Stack {
 	int m_Buffer[512];
@@ -25,13 +224,15 @@ int main() {
 		cout << s.Top() << " "; // 4 3 2 1
 		s.Pop(); // Must otherwise stack overflow
 	}
-
 	return 0;
 }
+*/
 
 
 
-#else
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // ref: Variadic Templates
 // https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958202
 #include<iostream>
@@ -99,6 +300,7 @@ void Print_variableArg_DifferentType(T &&x, Params&&... args) { // PASS BY RVALU
 	// cout << sizeof...(args) << " " << sizeof...(Params) << endl; // 3 3, 2 2, 1 1, 0 0
 	if (sizeof...(args) != 0) cout << ",";
 
+	// std::forward - preserve the type of arguments passed in function parameters
 	Print_variableArg_DifferentType(std::forward<Params>(args)...); // args... - passing RVALUE by Perfect forwarding - Pass by refernce !!!
 }
 
