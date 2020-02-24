@@ -1,7 +1,94 @@
 #if 1
-// ref: Class Templates Explicit Specialization
-// https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958210
+
+#else
+// Ref: Class Templates Partial Specialization
+// https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958214
+
 #include<iostream>
+using namespace std;
+
+template<typename T, int columns>
+class PrettyPrinter {
+	T *m_pData;
+public:
+	PrettyPrinter(T *data) : m_pData(data) { }
+	void Print() { 
+		cout << "Columns:" << columns << endl;
+		cout << "{ " << *m_pData << " }" << endl; 
+	}
+	T *GetData() { return m_pData; }
+};
+
+// Partial Specialization: Partially specialize some of the values(NOT ALL) of template parameters
+// Here we are paritially specializing the 2nd non-template argument
+template<typename T> // REMOVE: int columns
+class PrettyPrinter<T, 80> { // Paritially specialize 'variable int columns' into 'constant final value'
+	T *m_pData;
+public:
+	PrettyPrinter(T *data) : m_pData(data) { }
+	void Print() {
+		cout << "Using specialized 80" << endl;
+		cout << "{ " << *m_pData << " }" << endl;
+	}
+	T *GetData() { return m_pData; }
+};
+
+int main() {
+	int data = 123;
+	PrettyPrinter<int, 40> p{ &data };
+	p.Print();
+
+	PrettyPrinter<int, 80> q{ &data };
+	q.Print();
+
+	return 0;
+}
+
+
+// Implementation of smart pointer which works with any type
+template<typename T>
+class SmartPointer {
+	T *m_ptr;
+public:
+	SmartPointer(T *ptr):m_ptr(ptr) { }
+	~SmartPointer() { delete m_ptr; }
+
+	T * operator ->() { return m_ptr; } // overload -> and * operators
+	T & operator  *() { return *m_ptr; } // NOTE: *m_ptr	
+};
+
+// Partially specialize for array type
+template<typename T>
+class SmartPointer<T[]> {		// T[] - Array Type
+	T *m_ptr;
+public:
+	SmartPointer(T *ptr) :m_ptr(ptr) { }
+	~SmartPointer() { delete[] m_ptr; }
+	
+	// T * operator ->() { return m_ptr; }  // NOT needed for array type
+	// T & operator  *() { return *m_ptr; } // NOT needed for array type
+	T & operator [](int index) { return m_ptr[index]; }	
+};
+
+int main() {
+	SmartPointer<int> spi{ new int(3) }; // single value 3
+	cout << *spi << endl;
+
+	SmartPointer<int[]> spa{ new int[3] }; // Array of any 3 int values
+	spa[0] = 7;
+	cout << spa[0] << endl;
+
+	return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Ref: Class Templates Explicit Specialization - Part 1 & 2
+// https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958210
+// https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958212
+
+
+#include<iostream>
+#include<vector>
 using namespace std;
 
 template<typename T>
@@ -10,7 +97,7 @@ class PrettyPrinter {
 public:
 	PrettyPrinter(T *data) : m_pData(data){ }
 	void Print() { cout << "{ " << *m_pData << " }" << endl; }
-	T* GetData() { return m_pData; }
+	T *GetData() { return m_pData; }
 };
 
 // Explict specialization for char*
@@ -20,8 +107,35 @@ class PrettyPrinter<char*> {
 public:
 	PrettyPrinter(char *data) : m_pData(data) { }
 	void Print() { cout << "{ " << m_pData << " }" << endl; } //  *m_pData => m_pData
-	char* GetData() { return m_pData; }
+	char *GetData() { return m_pData; }
 };
+
+
+// Explict specialization for std::vector<int> - ENTIRE CLASS SPECIALIZATION
+// Option 1:
+template<>
+class PrettyPrinter<std::vector<int>> {
+	std::vector<int> *m_pData;
+public:
+	PrettyPrinter(std::vector<int> *data) : m_pData(data) { }
+	void Print() { 
+		// cout << "{ " << *m_pData << " }" << endl; // ERROR : m_pData - ptr to vector, *m_pData - return vector itself. << is NOT overloaded for pointer to vector.
+		cout << "{ ";
+		for (const auto &x : *m_pData) cout << x; // OK - NOT loop
+		cout << " }";
+	} 
+	std::vector<int> *GetData() { return m_pData; }
+};
+
+
+// Explict specialization for std::vector<int> - ONLY PARTICULAR MEMBER FUNCTION SPECIALIZATION
+// Option 1:
+template<>
+void PrettyPrinter<std::vector<int>>::Print() {
+	cout << "{ ";
+	for (const auto &x : *m_pData) cout << x; // OK - NOT loop
+	cout << " }";
+}
 
 int main() {
 	int i = 5;
@@ -67,63 +181,18 @@ int main() {
 	cout << *pData << endl; 		 // H
 	cout << pData << endl; 			 // Hello Sridhar
 
+	// USE EXPLICIT SPECIALISATION FOR vector<int>
+	std::vector<int> v{ 1,2,3,4 };
+	PrettyPrinter<std::vector<int>> pv(&v);
+	pv.Print(); 					 // { 1234 }
+	// cout << *pv.GetData() << endl; // ERROR: << is NOT overloaded for '*pv.GetData()'
+	cout << pv.GetData() << endl;  // 010FFB60
+	//int *pData = pv.GetData();
+
 	return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#else
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ref: Class Templates
 // https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958208
 #include<iostream>
