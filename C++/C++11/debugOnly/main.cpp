@@ -1,5 +1,64 @@
 #if 1
 
+// Ref: https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958216
+#include <iostream>
+#include <vector>
+#include <list>
+
+const char * GetErrorMessage(int errorNo) { return "Empty"; }
+
+// typedef const char *(*PF)(int); // Option 1
+using PF = const char *(*)(int);   // Option 2
+
+void ShowError(PF pf) { 
+	std::cout << pf(9); // Empty
+}
+
+// NOTE: typedef can NOT be templatized but 'using' can !!!
+typedef std::vector<std::list<std::string>> Names_typedef; // Option 1
+template<typename T>									   // Option 2 (preferred)
+using Names_using = std::vector<std::list<T>>;
+
+int main() {	
+	PF pf = GetErrorMessage;
+	ShowError(pf);
+
+	Names_typedef names;			  // can NOT be templatized
+	Names_using<std::string> players; // templatized
+	Names_using<int> playerNumber;    // templatized
+
+	Names_using<Names_using<std::string>> nested; // Nested as well !!
+	return 0;
+}
+
+// Type definition - typedef:
+typedef unsigned int INT;
+UINT val{};
+
+typedef long long LLONG;
+LLONG elem{};
+
+typedef std::vector<std::list<Employee>> Teams;
+Teams testingTeams;
+Teams::iterator it = testingTeams.begin();
+
+typedef const char *(*ErrorFn)(int);
+ErrorFn pfn = GetErrorMessage;
+
+// Type Alias - using: (Preferred)
+using INT = unsigned int;
+UINT val{};
+
+using LLONG = long long;
+LLONG elem{};
+
+using Teams = std::vector<std::list<Employee>> ;
+Teams testingTeams;
+Teams::iterator it = testingTeams.begin();
+
+using ErrorFn = const char *(*)(int);
+ErrorFn pfn = GetErrorMessage;
+
 #else
 // Ref: Class Templates Partial Specialization
 // https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958214
