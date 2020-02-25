@@ -1,5 +1,140 @@
 #if 1
+#include<iostream>
 
+// Function template: It is NOT a function. It is a template for MAKING FUNCTION.
+template<typename T>
+T abs(T x) { 
+	return (x >= 0) ? x : -x; }
+// Don't pay for what you don't use: If nobody calls abs<int>, it WON'T be INSTANTIATED by the compiler at all.
+
+int main() {	
+	printf("%d", abs<int>(-42)); // 42 (positive value / absolute value)
+
+	double(*foo)(double) = abs<double>; // compiler will NOT instantiated for the type foo
+	printf("%f", foo(-42));      // 42.000000 - type instantiated for the type foo
+	return 0;
+}
+
+Class Template: It is NOT a class. It is a template for MAKING CLASS. It can create NEW TYPE.
+Template class : It is a CLASS, created from 'class template'.
+
+C style of making - Generic types:
+struct myGenericList {
+	void *data;
+	myGenericList *next;
+};
+myGenericList *intList = ...;
+myGenericList *doubleList = ...;
+
+C++ style of making - Generic types using 'class template':
+template<typename T>
+struct myGenericList {
+	T data;
+	myGenericList<T> *next;
+};
+
+myGenericList<int>    *intList = ...;
+myGenericList<double> *doubleList = ...;
+
+// static data member(sdm) must be defined somewhere if you want to use it.
+
+struct S { static int sdm; };
+int main() { return S::sdm; } // ERROR: undefined reference to 'S::sdm;'
+
+struct S { static int sdm; };
+int S::sdm = 42; // definition
+int main() { return S::sdm; } // OK
+
+template<class T>
+struct S { static int sdm; };
+
+template<class T>
+int S<T>::sdm = 42; // templated definition
+// NOTE: 1. Above sdm definition even can be placed in a different header file. The same will NOT work for
+// normal class and normal function. inline function sdm CAN be placed in a different header file.
+
+// 2. inline and template: Whichever the scenario the inline works the template work as well
+
+int main() { return S::sdm; } // OK
+
+#  2 new kinds of templates:
+C++11 : Introduced alias templates.
+C++14 : Introduced vaiable templates.
+
+variable template:It is a syntatic sugar of 'static data member' of a class template.
+
+// class template with a static data member
+template<typename T>
+struct is_void {
+	static const bool value = (some expression); // sdm
+};
+
+int main() {
+	printf("%d", is_void<int>::value); // 0
+	printf("%d", is_void<void>::value); // 1
+}
+
+// variable template
+template<typename T>
+const bool is_void_value = (some expression); // NOTE: static is NO longer needed!
+
+int main() {
+	printf("%d", is_void_value<int>); // 0
+	printf("%d", is_void_value<void>); // 1
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#else
 // Ref: https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958216
 #include <iostream>
 #include <vector>
@@ -59,7 +194,7 @@ Teams::iterator it = testingTeams.begin();
 using ErrorFn = const char *(*)(int);
 ErrorFn pfn = GetErrorMessage;
 
-#else
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ref: Class Templates Partial Specialization
 // https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958214
 
