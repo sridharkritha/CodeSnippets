@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Operator precedence:
 // '!=' Higher precedence than '='
-	while((c = getchar()) != EOF) 
+	while((c = getchar()) != EOF) { }
 
 // '==' Higher precedence than '||'
 	// Shortcircuit - Expressions connected by '|| && ' are evaluated LEFT to RIGHT
@@ -19,13 +19,13 @@
 
 // Uninary operator( &, *) binds more tightly than Arithmetic operators
 	y = *ip + 1; // (*ip) + 1; increments the VALUE by 1 pointed by an pointer ip.
-	*ip += 1; // *ip = (*ip) + 1; VALUE increment by 1
-	++*ip; // ++(*ip); Also same as *ip += 1; VALUE increment by 1
+	*ip += 1;	 // *ip = (*ip) + 1; VALUE increment by 1
+	++*ip; 		 // ++(*ip); Also same as *ip += 1; VALUE increment by 1
 	
-	*ip++; // *(ip++); NOTE: ADDRESS incremented NOT value. Both [*, ++] have SAME precedence and [RIGHT to LEFT] associative applies.
-	(*ip)++; // VALUE increment by 1
+	*ip++; 		// *(ip++); NOTE: ADDRESS incremented NOT value. Both [*, ++] have SAME precedence and [RIGHT to LEFT] associative applies.
+	(*ip)++; 	// VALUE increment by 1
 
-	*++ip; // Increment ip to next object first and then get the value from the new location
+	*++ip; 		// Increment ip to next object first and then get the value from the new location
 
 // Standard Idioms for pushing and popping a stack.
 	*p++ = val; // push val onto stack
@@ -35,22 +35,22 @@
 	for(int i = 0; i < sizeof v / sizeof v[0]; ++i) { }
 
 // Mixed precedence
-for(i = 0; i < lim-1 && (c = getchar())!= EOF && c!='\n'; ++i)
-1. i < (lim -1)				// '-' has Higher precedence than <, !=, && (NOTE the order!!)
-2. (c = getchar())			// '=' Low precedence so it need ()
-3. (c = getchar())!= EOF	// '!=' has Highter precdence than '&&'
-4. c!='\n'					// '!=' has Highter precdence than '&&'
-5. shortcircuit && => i < lim -1 && (c = getchar())!= EOF && c!='\n' // Lowest precedence &&
+	for(i = 0; i < lim-1 && (c = getchar())!= EOF && c!='\n'; ++i)
+	1. i < (lim -1)				// '-' has Higher precedence than <, !=, && (NOTE the order!!)
+	2. (c = getchar())			// '=' Low precedence so it need ()
+	3. (c = getchar())!= EOF	// '!=' has Highter precdence than '&&'
+	4. c!='\n'					// '!=' has Highter precdence than '&&'
+	5. shortcircuit && => i < lim -1 && (c = getchar())!= EOF && c!='\n' // Lowest precedence &&
 
 // Note: 
-//		'<=' Higher precedence than '!='
-//		'!=' Higher precedence than '&&'
-//		'&&' Higher precedence then '+='
+	//		'<=' Higher precedence than '!='
+	//		'!=' Higher precedence than '&&'
+	//		'&&' Higher precedence then '+='
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Shortcuts:
- // 1. postfix trick
+// 1. postfix trick
 	if(c == '\n') {
 		s[i] = c; // Don't forget to append the new line and do one more count
 		++i;
@@ -58,55 +58,55 @@ for(i = 0; i < lim-1 && (c = getchar())!= EOF && c!='\n'; ++i)
 
 	if(c == '\n') s[i++] = c; // postfix trick
 
-  // 2.  Assignment operator trick
+// 2.  Assignment operator trick
   <expression1> <operator> = <expression2> 
   <expression1> = (<expression1>) <operator> (<expression2>)   NOTE: brackets
   a *= b + 1;
   a = a * (b + 1); // Correct
   a = a * b + 1; // Wrong
 
-  // Pointer:
-& operator ONLY applies to object in MEMORY: variables and array elements. It CANNOT be applied to
-expressions, constants or register variables.
+// Pointer:
+& operator ONLY applies to object in MEMORY: variables and array elements. 
+It CANNOT be applied to expressions, constants or register variables.
 
-int *ip; // Expression *ip is an int [or] Pointer to int
-double *dp, atoi(char *); // *dp Pointer to double, atoi returns double(NOT pointer) which has argument Pointer to char
+int *ip; 					// Expression *ip is an int [or] Pointer to int
+double *dp, atoi(char *);	// *dp Pointer to double, atoi returns double(NOT pointer) which has argument Pointer to char
 
 
-  // Pointer and Array:
-  // Similarities
-  int a[10];
-  int *pa;
-  pa = &a[0];
-  pa = a; // same as above
-  int k = 2;
-  cout << &a[k]; // address of location 2
-  cout << a+k; // same as above
-  cout << a[i];
-  cout << *(a+i); // same as above
+// Pointer and Array:
+	// Similarities
+	int a[10];
+	int *pa;
+	pa = &a[0];
+	pa = a; // same as above
+	int k = 2;
+	cout << &a[k]; // address of location 2
+	cout << a+k; // same as above
+	cout << a[i];
+	cout << *(a+i); // same as above
 
-  // Difference : 1
-  pa = a;
-  pa++; // Legal - moving to next location 
-  a++;  // ILLEGAL - You CANN'T increment the array name
+	// Difference : 1
+	pa = a;
+	pa++; // Legal - moving to next location 
+	a++;  // ILLEGAL - You CANN'T increment the array name
 
-  Automatic conversion of array Name into Pointer:
-  If you pass the array to a function, what is passed is the LOACATION of the first element - that is a POINTER.
-  Example:
-  // strlen (ver. 1): return length of string s
-  int strlen(char *s) {						// strlen excludes the '\0' from the count
-	  for(int n = 0; *s != '\0'; s++) ++n; // s is a pointer NOT a array NAME. so you can increment
-	  return n;
-  }
+	Automatic conversion of array Name into Pointer:
+	If you pass the array to a function, what is passed is the LOACATION of the first element - that is a POINTER.
+	Example:
+	// strlen (ver. 1): return length of string s
+	int strlen(char *s) {						// strlen excludes the '\0' from the count
+		for(int n = 0; *s != '\0'; s++) ++n; // s is a pointer NOT a array NAME. so you can increment
+		return n;
+	}
 
-  // Note: Below 2 forms both are the same
-  int strlen(char *s)  { }
-  int strlen(char s[]) { }
+	// Note: Below 2 forms both are the same
+	int strlen(char *s)  { }
+	int strlen(char s[]) { }
  
  List of possible callers are
- strlen("Hello Muthu Raman"); // string CONSTANT
- strlen(array); // char array[100]; character ARRAY
- strlen(ptr); // char *ptr
+	strlen("Hello Muthu Raman"); // string CONSTANT
+	strlen(array); 				 // char array[100]; character ARRAY
+	strlen(ptr); 				 // char *ptr
 
  Pointer Arithmetic:
  If 'p' and 'q' points to elements of the 'same array' and 'p < q' then 'q - p + 1' (No. of elements from 'p' to 'q' both inclusive)
@@ -137,7 +137,7 @@ double *dp, atoi(char *); // *dp Pointer to double, atoi returns double(NOT poin
   }
 
 // strcpy (ver. 2- pointer version): copy t to s
-  void strcpy(char *s, char *t) {
+void strcpy(char *s, char *t) {
 	 while((*s = *t) != '\0') {
 		 s++;
 		 t++;
@@ -145,7 +145,7 @@ double *dp, atoi(char *); // *dp Pointer to double, atoi returns double(NOT poin
   }
 
 // strcpy (ver. 2- pointer version MORE simplified): copy t to s
-  void strcpy(char *s, char *t) {
+void strcpy(char *s, char *t) {
 	 // Standard Idiom with '=' 
 	 while(*s++ = *t++); // value of '*t++' is the character that 't' pointed to before 't' was incremented.
   }
@@ -178,9 +178,9 @@ int m[2][3] = { {0, 1, 2},
 				{3, 4, 5} };
 // POINTER TO AN ARRAY of rows, where each row is an array of 3 ints
 int m[][3] = {  {0, 1, 2},		// row is Optional
-				{3, 4, 5} };	
-int (*m)[3] = { {0, 1, 2},	 // () must bcos [] have higher precedence.
-				{3, 4, 5} }; // without () => WRONG meaning => int *a[3] - ARRAY OF 13 POINTERS to integers
+				{3, 4, 5} };
+int (*m)[3] = { {0, 1, 2},		// () must bcos [] have higher precedence.
+				{3, 4, 5} };	// without () => WRONG meaning => int *a[3] - ARRAY OF 13 POINTERS to integers
 
 Array of Pointers: Commonly used for storing the 'character strings of diverse lengths'.
 int m[2][3]; // multi-dimen array. 2x3 = 6 int fixed sized location has been reserved.
@@ -242,6 +242,8 @@ Summary:
 			 - In the above expression, the increments are happening for the 'pointer argv[0]'
 
 
+{} // colour
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Cautions:
   // 1. Order in which funtion arguments are evaluated is not specified
@@ -260,10 +262,6 @@ Summary:
   SIDE EFFECTS - some variable is changed as a by-product of the evaluation of an expression.
 
   Moral - Writing code that depends on order of evaluation is a bad programming practice in any language.
-
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Copy input to output
@@ -341,7 +339,7 @@ int binarySearch(int n, int x, int v[]) {
 		mid = (low + high) / 2;
 		if(x < v[mid]) high = mid - 1; 		// Note: -1
 		else if(x > v[mid]) low = mid + 1;  // Note: +1
-		else return mid; // match found and return the index
+		else return mid; 					// match found and return the index
 	}
 	return -1;
 }
@@ -372,8 +370,8 @@ void swap(int v[], int i, int j) {
 // Step 3: Repeat the same process for the subsets. STOP once subset has only ONE element - NO need to sort.
 void qsort(int v[], int left, int right) {
 	int i, last;
-	if (left >= right) return; // do nothing if array contains less than 2 elements[1 element - NO need to sort]
-	swap(v, left, (left + right) / 2); // middle element is chosen for partition. Move partition element(p) to v[0]. 
+	if (left >= right) return; 			// do nothing if array contains less than 2 elements[1 element - NO need to sort]
+	swap(v, left, (left + right) / 2);  // middle element is chosen for partition. Move partition element(p) to v[0]. 
 	last = left;
 	for (i = left + 1; i <= right; ++i) {	// partition
 		if (v[i] < v[left]) swap(v, ++last, i);
@@ -385,7 +383,7 @@ void qsort(int v[], int left, int right) {
 
 int main() {
 	int v[3] = { 4, 1, 5};
-	qsort(v, 0, sizeof v / sizeof v[0] - 1); // qsort(v,0, 2) - NOTE: -1
+	qsort(v, 0, sizeof v / sizeof v[0] - 1); 		// qsort(v,0, 2) - NOTE: -1
 	for(int i = 0; i < sizeof v / sizeof v[0]; ++i) // arraySize =  sizeof v / sizeof v[0]
 	cout << v[i];
 	return 0;
@@ -417,11 +415,11 @@ void swap(void *v[], int i, int j) {
 
 void qsort(int *v[], int left, int right, int (*cmp)(void *, void *)) {
 	int i, last;
-	if (left >= right) return; // do nothing if array contains less than 2 elements[1 element - NO need to sort]
-	swap(v, left, (left + right) / 2); // middle element is chosen for partition. Move partition element(p) to v[0]. 
+	if (left >= right) return; 			// do nothing if array contains less than 2 elements[1 element - NO need to sort]
+	swap(v, left, (left + right) / 2);  // middle element is chosen for partition. Move partition element(p) to v[0]. 
 	last = left;
 	for (i = left + 1; i <= right; ++i) {	// partition
-		if ((*cmp)(v[i], v[left]) < 0) // Numeric or String Comparision function
+		if ((*cmp)(v[i], v[left]) < 0) 		// Numeric or String Comparision function
 			swap(v, ++last, i);
 	}
 	swap(v, left, last); // restore partition element.
@@ -442,8 +440,8 @@ cmp - is a function which return  a pointer to an int. (DIFFERENT meaning!)
 // Reverse the string 's' in place
 void reverse(char s[]) {
 	int c, i, j;
-	for(i = 0, j = strlen(s) - 1; i < j; ++i, --j) // PatternNote: strlen(s) - 1 (or) array[n] - 1 
-			c = s[i], s[i] = s[j], s[j] = c; // Left to Right
+	for(i = 0, j = strlen(s) - 1; i < j; ++i, --j)  // PatternNote: strlen(s) - 1 (or) array[n] - 1 
+			c = s[i], s[i] = s[j], s[j] = c; 		// Left to Right
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 // atoi: convert string 's' to integer
@@ -478,11 +476,11 @@ double atoi(char s[]) {
 // atoi: convert integer to string 's'
 void itoa(int n, char s[]) {
 	do { // generate digits in reverse order
-		s[i++] = n % 10 + '0'; // Last digit extracted
-		// n = n / 10; // Delete the last digit
+		s[i++] = n % 10 + '0';  // Last digit extracted
+		// n = n / 10; 			// Delete the last digit
 	}while((n /= 10) > 0);
 	s[i] = '\0';
-	reverse(s); // reverse the digits	
+	reverse(s); // reverse the digits
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Macro Substitution:
@@ -549,7 +547,7 @@ struct point origin, *sp;
 sp = &origin;
 cout << origin.x;
 cout << (*sp).x; // '.' higher precedence than '*'. Also *sp.x = *(sp.x) = illegal access/meaningless
-cout << sp->x; // same as above but prefered way of writing.
+cout << sp->x; 	 // same as above but prefered way of writing.
 
 struct rectangle screen, *sp = &screen;
 cout << screen.pt1.x;
@@ -559,16 +557,16 @@ cout << (sp->pt1).x;
 
 More Examples:
 struct { int len; char *str } *p;
-++p->len; // increments len, NOT p
+++p->len; 	// increments len, NOT p
 ++(p->len); // same as above
 (++p)->len; // increments 'p' before accessing 'len'
 (p++)->len; // access 'len' and then increment 'p'
-p++->len; // same as above
+p++->len; 	// same as above
 
-*p->str; // fetches wathever str points to
-*p->str++; // increments 'str' and then access what it points to
+*p->str; 	 // fetches wathever str points to
+*p->str++; 	 // increments 'str' and then access what it points to
 (*p->str)++; // increments the content which is pointed by str.
-*p++->str; // accessing whatever 'str' points to and then increment 'p'.
+*p++->str; 	 // accessing whatever 'str' points to and then increment 'p'.
 
 Array of Structures:
 struct key { char *word; int count; } keyArr[NKEYS];
@@ -593,7 +591,7 @@ struct node {
 
 Otherway of writting recurrsive structure declaration:
 struct node {
-	struct A *a; // a points to A
+	struct A *a; 	// a points to A
 }
 
 struct A {
@@ -662,8 +660,8 @@ void main(){
 // Union Initialization - Only initialized with a value of the type of its FIRST member.
 union {
       char name[15]; // ONLY first members can be initialized
-      int age; // Can NOT be initialized
-      float weight;// Can NOT be initialized
+      int age; 		 // Can NOT be initialized
+      float weight;	 // Can NOT be initialized
 } people = {"Hello Sridhar"};
 
 Bit Fields: Pack several objects into a single machine word.
