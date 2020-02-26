@@ -76,13 +76,128 @@ int main() {
 
 // variable template
 template<typename T>
-const bool is_void_value = (some expression); // NOTE: static is NO longer needed!
+const bool is_void_value = (some expression); // NOTE: It is NO longer a static !
 
 int main() {
 	printf("%d", is_void_value<int>); // 0
 	printf("%d", is_void_value<void>); // 1
 }
 
+In the STL: the best of both worlds
+template<typename T>
+struct is_void {
+	static constexpr bool value = (some expression);
+};
+
+template<typename T>
+constexpr bool is_void_v = is_void<T>::value;
+
+int main() {
+	printf("%d", is_void<int>::value);  // 0
+	printf("%d", is_void_v<void>);		// 1
+}
+
+Alias templates:
+typedef std::vector<int> myvect_int; // C++03 alias syntax
+
+using myvect_double = std::vector<double>; // C++11 using syntax
+template<typename T> using myvec = std::vector<T>; // C+11 syntax
+
+int main{
+	static_assert(is_same_v(myvect_int, std::vector<int>>);
+	static_assert(is_same_v(myvect_double, std::vector<double>> );
+	static_assert(is_same_v(myvect<float>, std::vector<float>> );
+}
+
+  Year				Template types  
+C++ 1998	Function and Class Templates
+C++ 2011	Alias
+C++ 2014	Variable
+C++ 2017	NOTHING newly added
+
+Puzzles:
+// NOTE: NO implicit conversion is allowed in template deduction
+1.
+#include<algorithm>
+short f();
+int main() {
+	int x = 42;
+	return std::max(f(), x); // Error: f is short BUT x is int. NO matching for the template argument T in std::max(T, T)
+}
+
+// Solution 1: Make the arugments match exactly
+return std::max(static_cast<int>(f()), x); 
+
+// Solution 2: Make the paramenter stop contributing to deduction.
+return std::max<int>(f(), x);
+
+2. 
+template<typename T, typename U>
+void foo(std::array<T, sizeof U> x, std::array<U, sizeof T> y, int z) {
+	puts(__PRETTY_FUNCTION__);
+}
+// std::array<T, sizeof U> x
+// x tells/deduce  T is an int BUT does not tell anything about sizeof U - it is calculated by the compiler
+
+int main() {
+	foo(std::array<int, 8>{}, std::array<double, 4>{}, 0.0); // OK bcos sizeof int == 4, sizeof double == 8, 0.0 implicitly converts to int
+	foo(std::array<int, 9>{}, std::array<double, 4>{}, 0.0); // Error: <int,9> NOT matches to <int,8>
+	// <int,9> will NOT implicitly converted to <int,8>.
+}
+
+
+Unary + : There is NO unary + suport for lambda type BUT function pointer type  has.
+Captureless lambda types are always implicitly convertible to function pointer type. But
+being implicitly convertible to a thing does not mean actually being that thing!
+Note: if you absolutly need the function-pointer conversion to happen, add a unary +
+
+3. 
+template<typename T, typename U>
+void foo(T (*fptr)(U)) { // T <- double, U <- int
+	puts(__PRETTY_FUNCTION__);
+}
+
+int main() {
+	foo( [](double x) { return int(x); }); // ERROR:
+	foo(+[](double x) { return int(x); }); // OK
+}
+
+4.How to call a specialization explicitly ?
+template<typename T, typename U>
+void add(T x, U y) {
+	puts(__PRETTY_FUNCTION__);
+}
+
+int main() {
+	add<int, int>('x', 3.1); // [T = int,  U = int] so x,y are NO longer contributing to the type deduction of T,U
+	add<int>('x', 3.1);		 // [T = int,  U = double]
+	add<>('x', 3.1);		 // [T = char, U = double]
+	add('x', 3.1);			 // [T = char, U = double]
+}
+
+5. default template parameters:
+template<typename T>
+void add() { 
+	puts(__PRETTY_FUNCTION__);
+}
+
+int main() {
+	add<int>(); // OK: [T = int]
+	add<>();    // ERROR: couldn't infer template argument T
+	add();      // ERROR: couldn't infer template argument T
+}
+
+// Solution:
+template<typename T = char *>
+void add() {
+	puts(__PRETTY_FUNCTION__);
+}
+
+int main() {
+	add<int>(); // OK: [T = int]
+	add<>();    // OK: [T = char *]
+	add();      // OK: [T = char *]
+}
 
 
 
