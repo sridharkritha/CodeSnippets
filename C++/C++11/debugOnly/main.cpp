@@ -109,11 +109,7 @@ int main{
 	static_assert(is_same_v(myvect<float>, std::vector<float>> );
 }
 
-  Year				Template types  
-C++ 1998	Function and Class Templates
-C++ 2011	Alias
-C++ 2014	Variable
-C++ 2017	NOTHING newly added
+
 
 Puzzles:
 // NOTE: NO implicit conversion is allowed in template deduction
@@ -200,6 +196,124 @@ int main() {
 }
 
 
+ambersant & :
+
+int i;
+
+template<typename T>
+void f(T t) { puts(__PRETTY_FUNCTION__); }
+f(i);  // void f(T)   [T = int]
+
+template<typename T>
+void f(T *t) { puts(__PRETTY_FUNCTION__); }
+f(&i); // void f(T*)  [T = int]
+
+// Lvalue references
+template<typename T>
+void f(T& t) { puts(__PRETTY_FUNCTION__); }
+f(i);  // void f(T&)  [T = int], 'i' is a Lvalue
+f(static_cast<int&>(i)); // [T = int]
+f(static_cast<int&&>(i)); // ERROR
+f(static_cast<volatile int&>(i)); // [T = volatile int]
+f(static_cast<volatile int&&>(i)); // Error
+f(static_cast<const int&>(i)); // [T = cont int]
+f(static_cast<const int&&>(i)); //  [T = cont int] - NO ERROR !!!
+
+// Rvalue references
+template<typename T>
+void f(T&& t) { puts(__PRETTY_FUNCTION__); }
+f(42); // void f(T&&) [T = int], '42' is a Rvalue. '42' is 'int&&' so T deduced either [T = int&&] or [T = int] (fewer ampersands preferred)
+f(std::move(i)); // void f(T&&) [T = int], 'std::move(i)' is a Rvalue
+f(i);  // void f(T&&) [T = int&] - reference collaspsig. 'i' is 'int&' so 'T&&' is 'int&'
+const int j = 42;
+f(j); // [T = const int&].'i' is 'const int&' 
+f(std::move(j)); // [T = const int]. 'i' is 'const int&&'
+
+template<typename T>
+void foo(void (*f)(T)) { puts(__PRETTY_FUNCTION__); }
+void bar(int&&) { }
+foo(bar); // [T = int&&]
+
+// Reference collapsing in C++03
+template<typename T>
+void foo(T t) {
+	T&  x = ...; // int& x
+	T&& y = ...; // int& y
+}
+
+int main() {
+	int i;
+	foo<int&>(i)
+}
+
+Reference collapsing:
+&  + &  = &			L + L = L
+&  + && = &			L + R = L
+&& + &  = &			R + L = L
+&& + && = &&		R + R = R
+
+
+Year		  Template types	      Type deduction		Specialization
+C++ 1998	Function Template			Supported				Supported
+c++ 1998    Class Template				NOT supported			Supported
+C++ 2011	Alias						NOT supported			   NO
+C++ 2014	Variable					NOT supported			Supported
+C++ 2017	NOTHING newly added			Now Class supports 
+										type deduction BUT 
+										NOT all compilers.
+
+template<typename T = void>
+struct foo { };
+foo bar;    // ERROR
+foo <> bar; // OK
+
+// Template Specialization:
+template<typename T>
+struct is_void {
+	static constexpr bool value = false;
+};
+
+template<>				// empty <>
+struct is_void<void> {	// specialization for 'void'
+	static constexpr bool value = true;
+};
+
+int main() {
+	printf("%d", is_void<int>::value);  // 0
+	printf("%d", is_void<void>::value);	// 1
+}
+
+template<typename T>
+int my_sizeof() { return sizeof (T); }
+
+template<>
+int my_sizeof<void>() { return 1; }
+
+template<typename T>
+T abs(T x) {
+	return (x >= 0) ? x : -x;
+}
+
+template<>
+int abs<int>(int x) {
+	if (x == INT_MIN) throw std::domain_error("oops");
+	return (x >= 0) ? x : -x;
+}
+
+template<>
+int abs<>(int x) { // <> by type deduction
+	if (x == INT_MIN) throw std::domain_error("oops");
+	return (x >= 0) ? x : -x;
+}
+
+template<>
+int abs(int x) { // without <>. Most often you will see in practice.
+	if (x == INT_MIN) throw std::domain_error("oops");
+	return (x >= 0) ? x : -x;
+}
+
+template<typename T> using myvec = std::vector<T>;
+template<> using myvec<void> = void; // Error: explicit specialization of alias templates is NOT permitted.
 
 
 
