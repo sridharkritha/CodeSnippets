@@ -1,4 +1,8 @@
 #if 1
+// CppCon 2016: Arthur O'Dwyer Template Normal Programming (part 1 of 2)
+// https://www.youtube.com/watch?v=vwrXHznaYLA&t=597s
+// https://www.youtube.com/watch?v=VIz6xBvwYd8
+// https://github.com/CppCon/CppCon2016/tree/master/Tutorials/Template%20Normal%20Programming%2C%20Part%201
 #include<iostream>
 
 // Function template: It is NOT a function. It is a template for MAKING FUNCTION.
@@ -315,9 +319,84 @@ int abs(int x) { // without <>. Most often you will see in practice.
 template<typename T> using myvec = std::vector<T>;
 template<> using myvec<void> = void; // Error: explicit specialization of alias templates is NOT permitted.
 
+// 1. Alias templates can NOT be specialized.
+template<typename T>
+using myvec =  std::vector<T>
 
+template<typename T>
+void foo(myvec<T>& mv) {  // void foo(std::vector<T>&)
+	puts(__PRETTY_FUNCTION__);
+}
 
+int main() {
+	std::vector<int> v;
+	foo(v); // void foo(myvec<T> &) [ T = int ]
+}
 
+// we can "propagate T through" the definition of myvec to find that foo<T> takes std::vector<T>
+
+// 2. class templates can be specialized.
+template<typename T>
+struct myvec {
+	using type = std::vector<T>;
+};
+
+template<typename T>
+void foo(typename myvec<T>::type& mv) {
+	puts(__PRETTY_FUNCTION__);
+}
+
+int main() {
+	std::vector<int> v;
+	foo(v); // could NOT infer template argument 'T'
+}
+
+// Bcos we don't know what myvec<T>::type is until we know what T is.
+
+//3. So class templates can NOT do deduction
+template<typename T>
+struct myvec {
+	explicit myvec(T t); // constructor
+};
+
+int main() {
+	myvec v(1); // ERROR
+}
+
+// Bcos we don't know what parameters types myvec<T>::myvec might take, until we know what T is.
+// Forward works: if T is int, we know that myvec<T>'s constructor take an int parameter.
+// But what we need here is to go backward: if myvec<U>'s constructor takes an int parameter, determine the value of U.
+
+// 3. Partial Specialization: It itself a template. It still requires further "customerization" by the user before it can be used.
+template<typename T>
+constexpr bool is_array = false;
+
+template<typename Tp>
+constexpr bool is_array<Tp[]> = true; // partial specialization
+
+int main() {
+	printf("%d", is_array<int>);   // 0
+	printf("%d", is_array<int[]>); // 0
+}
+
+// 4. No. of template params on the partial specialization is completely UNRELATED to the no. of template params on the original template.
+
+// this is the primary template
+template<typename T>
+constexpr bool is_array = false;
+
+// there are the paratial specializations
+template<typename Tp>
+constexpr bool is_array<Tp[]> = true;
+
+template<typename Tp, int N>
+constexpr bool is_array<Tp[N]> = true;
+
+template<> // this is a full specialization
+constexpr bool is_array<void> = true;
+
+// slide 71
+////////////////////////////////////////////////////////////////
 
 
 
