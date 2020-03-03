@@ -92,7 +92,7 @@ double *dp, atoi(char *);	// *dp Pointer to double, atoi returns double(NOT poin
 
 	Automatic conversion of array Name into Pointer:
 	If you pass the array to a function, what is passed is the LOACATION of the first element - that is a POINTER.
-	Example:
+	// Example:
 	// strlen (ver. 1): return length of string s
 	int strlen(char *s) {						// strlen excludes the '\0' from the count
 		for(int n = 0; *s != '\0'; s++) ++n; // s is a pointer NOT a array NAME. so you can increment
@@ -173,7 +173,7 @@ void strcpy(char *s, char *t) {
   int (*m)[3] = {{0, 1, 2}, {3, 4, 5}};
 
 Multi-dimensional array Vs Array of Pointer [preferred]:
-2d array:
+// 2d array:
 int m[2][3] = { {0, 1, 2},
 				{3, 4, 5} };
 // POINTER TO AN ARRAY of rows, where each row is an array of 3 ints
@@ -520,11 +520,11 @@ Conditional Inclusion:
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Structure:
-without structure tag:
+// without structure tag:
 struct { int x; int y;} a, b, c;
 int a, b, c;
 
-with structure tag:
+// with structure tag:
 struct point { int x; int y;};
 
 int a, b, c;

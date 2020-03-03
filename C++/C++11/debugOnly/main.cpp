@@ -1,4 +1,13 @@
 #if 1
+#include <iostream>
+int main() {
+	std::cout << "test";
+	return 0;
+}
+
+
+#else
+
 // CppCon 2016: Arthur O'Dwyer Template Normal Programming (part 1 of 2)
 // https://www.youtube.com/watch?v=vwrXHznaYLA&t=597s
 // https://www.youtube.com/watch?v=VIz6xBvwYd8
@@ -442,7 +451,10 @@ constexpr bool is_array<void> = true;
 
 
 
-#else
+
+//////////////////////////////////////////////////////////////////////////////
+// *****************************************************************************
+/////////////////////////////////////////////////////////////////////////////
 // Ref: https://www.udemy.com/course/beg-cpp-temp/learn/lecture/6958216
 #include <iostream>
 #include <vector>
