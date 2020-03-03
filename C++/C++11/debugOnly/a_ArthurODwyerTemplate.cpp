@@ -944,7 +944,7 @@ template<int n>
 void show() {
 	/// n = n + 1; // ERROR: You can NOT change it
 	cout << n;
-	char buffer[n]; // OK
+	char buffer[n]; // OK. Advantage: No need for creating a 'dynamic array of size N' which is defined at run time,
 }
 
 template<typename T>
