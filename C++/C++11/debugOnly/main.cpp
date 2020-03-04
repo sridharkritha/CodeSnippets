@@ -1,4 +1,21 @@
 #include <iostream>
+// http://www.gotw.ca/publications/mill17.htm
+
+template <typename T> void foo(T) { std::cout << "void foo(T)"; };
+template <typename T> void foo(T*) { std::cout << "void foo(T*)"; }; // overload of foo(T)
+template <>           void foo<int*>(int*) { std::cout << "foo<int>(int*)";  }; // specialisation of foo(T*)
+
+
+/*
+template <typename T> void foo(T) { std::cout << "void foo(T)"; };
+template <>           void foo<int*>(int*) { std::cout << "foo<int>(int*)"; }; // specialisation of foo(T*)
+template <typename T> void foo(T*) { std::cout << "void foo(T*)"; }; // overload of foo(T)
+*/
+int main() {
+	foo(new int); // calls foo<int>(int*);
+	return 0;
+}
+/*
 // Ref: https://www.learncpp.com/cpp-tutorial/132-function-template-instances/
 // Comparing User defined types
 template <typename T>				 // this is the 'template parameter declaration'
@@ -58,11 +75,13 @@ int main() {
 	return 0;
 }
 
-/*
+
+//////////////////////////////////////////////////////////////////////////////
 int count(0); 
 int count{ 0 }; 
 
 int array1[]{ 5, 3, 2, 1, 4 };
+int array1[4]{};
 
 int *m_data;
 assert(length > 0);
@@ -74,7 +93,6 @@ int& operator[](int index) {
 	assert(index >= 0 && index < m_length);
 	return m_data[index];
 }
-
 intArray[3] = 10;
 
 */
