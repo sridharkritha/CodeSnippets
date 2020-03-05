@@ -16,6 +16,9 @@ int main() {
 	return 0;
 }
 /*
+The fully specialized version will take precedence over the partially specialized version. 
+Classes also support partial specialization, where only some of the templated parameters are specialized. Functions do not support partial specialization as of C++14.
+
 // Ref: https://www.learncpp.com/cpp-tutorial/132-function-template-instances/
 // Comparing User defined types
 template <typename T>				 // this is the 'template parameter declaration'
