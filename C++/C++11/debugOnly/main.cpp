@@ -80,22 +80,6 @@ int main() {
 
 
 //////////////////////////////////////////////////////////////////////////////
-int count(0); 
-int count{ 0 }; 
 
-int array1[]{ 5, 3, 2, 1, 4 };
-int array1[4]{};
-
-int *m_data;
-assert(length > 0);
-m_data = new int[length];
-delete[] m_data;
-m_data = nullptr;
-
-int& operator[](int index) {
-	assert(index >= 0 && index < m_length);
-	return m_data[index];
-}
-intArray[3] = 10;
 
 */
