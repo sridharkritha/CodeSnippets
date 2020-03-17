@@ -21,3 +21,5 @@
 		return m_data[index];
 	}
 	intArray[3] = 10;
+
+	for (const auto &x : args) std::cout << x << " "; // range based for loop
